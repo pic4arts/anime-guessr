@@ -187,15 +187,6 @@ The application expects the following API endpoints:
 
 ## Development
 
-### Project Structure
-```
-anime-guessr/
-├── index.html     # Main application file
-├── Correct.wav    # Sound for correct selections
-├── Wrong.mp3      # Sound for wrong answers
-└── README.md      # This file
-```
-
 ### Technologies Used
 - HTML5
 - CSS3
