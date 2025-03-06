@@ -26,10 +26,138 @@ cd anime-guessr
 - `Correct.wav` - Sound for correct selections
 - `Wrong.mp3` - Sound for wrong answers
 
-3. Set up a local server (e.g., using Python):
+3. Set up a local server
+
+## Server Setup
+
+### Prerequisites
+- Node.js (v14 or higher)
+- npm (Node Package Manager)
+
+### Installation
+
+1. **Install Dependencies**
 ```bash
-python -m http.server 8000
+npm init -y
+npm install express cors
 ```
+
+2. **Create Server File**
+```javascript
+// filepath: /D:/dev/anime-guessr/server.js
+const express = require('express');
+const cors = require('cors');
+const fs = require('fs').promises;
+const path = require('path');
+
+const app = express();
+const port = 3000;
+
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
+
+const dataPath = path.join(__dirname, 'public', 'data.json');
+
+// API Endpoints
+app.get('/api/anime', async (req, res) => {
+    try {
+        const exists = await fs.access(dataPath).then(() => true).catch(() => false);
+        if (!exists) {
+            const defaultData = Array.from({ length: 7 }, () => []);
+            await fs.writeFile(dataPath, JSON.stringify(defaultData));
+            return res.json(defaultData);
+        }
+        
+        const data = await fs.readFile(dataPath, 'utf8');
+        res.json(JSON.parse(data));
+    } catch (error) {
+        console.error('Fehler beim Laden:', error);
+        res.status(500).send('Fehler beim Laden der Daten');
+    }
+});
+
+app.post('/api/anime', async (req, res) => {
+    try {
+        const data = req.body;
+        if (!Array.isArray(data) || data.length !== 7) {
+            return res.status(400).send('Ungültiges Datenformat');
+        }
+        
+        await fs.writeFile(dataPath, JSON.stringify(data));
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Fehler beim Speichern:', error);
+        res.status(500).send('Fehler beim Speichern der Daten');
+    }
+});
+
+app.listen(port, () => {
+    console.log(`Server läuft auf http://localhost:${port}`);
+});
+```
+
+3. **Project Structure**
+```
+anime-guessr/
+├── public/
+│   ├── index.html
+│   ├── sounds/
+│   │   ├── Correct.wav
+│   │   └── Wrong.mp3
+│   └── data.json (will be created automatically)
+├── server.js
+├── package.json
+└── README.md
+```
+
+4. **Update package.json**
+```json
+{
+  "name": "anime-guessr",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "cors": "^2.8.5"
+  }
+}
+```
+
+### Running the Server
+
+1. **Start the Server**
+```bash
+node server.js
+```
+Or using npm:
+```bash
+npm start
+```
+
+2. **Access the Application**
+- Open `http://localhost:3000` in your browser
+- The API endpoints will be available at:
+  - GET `http://localhost:3000/api/anime`
+  - POST `http://localhost:3000/api/anime`
+
+### Troubleshooting
+
+- If port 3000 is already in use, change the port number in `server.js`
+- Make sure all files are in the correct directory structure
+- Check the console for any error messages
+- Ensure all dependencies are installed (`npm install`)
+
+### Data Persistence
+
+The server stores all data in `public/data.json`. This file:
+- Is created automatically if it doesn't exist
+- Persists between server restarts
+- Can be backed up by copying the file
+- Should not be edited manually while the server is running
 
 ## Usage
 
