@@ -1,0 +1,3 @@
+- alphabetische Ordnung der listen
+- mehrere Animes auf einmal einfügen, wenn man mit Zeilenumbruch eingibt
+- eventuell besser stylen
