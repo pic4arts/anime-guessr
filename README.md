@@ -184,15 +184,27 @@ The application expects the following API endpoints:
 
 - `GET /api/anime` - Retrieve saved anime lists
 - `POST /api/anime` - Save updated anime lists
+- 
+## Project Structure
 
-## Development
+```plaintext
+anime-guessr/
+├── public/
+│   ├── index.html      # Frontend interface
+│   └── sounds/         # Audio feedback
+│       ├── Correct.wav
+│       └── Wrong.mp3
+├── server.js           # Node.js backend
+├── anime_data.json     # Data storage
+└── package.json        # Project configuration
+```
 
-### Technologies Used
-- HTML5
-- CSS3
-- JavaScript (ES6+)
-- Font Awesome icons
-- Web Audio API
+## Technology Stack
+
+- **Frontend**: HTML5, CSS3, JavaScript
+- **Backend**: Node.js, Express
+- **Storage**: Local JSON file system
+- **Dependencies**: express, fs, path
 
 ## Contributing
 
