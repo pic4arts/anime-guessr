@@ -153,7 +153,7 @@ npm start
 
 ### Data Persistence
 
-The server stores all data in `public/data.json`. This file:
+The server stores all data in `anime_data.json`. This file:
 - Is created automatically if it doesn't exist
 - Persists between server restarts
 - Can be backed up by copying the file
