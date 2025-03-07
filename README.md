@@ -129,6 +129,7 @@ cd anime-guessr
 
 ### Next Steps
 After setting up the prerequisites, proceed to the [Server Setup](#server-setup) section to configure the application.
+
 3. **Project Structure**
 ```
 anime-guessr/
