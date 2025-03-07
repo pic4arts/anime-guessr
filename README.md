@@ -22,11 +22,7 @@ git clone https://github.com/pic4arts/anime-guessr.git
 cd anime-guessr
 ```
 
-2. Create a local copy of the required sound files:
-- `Correct.wav` - Sound for correct selections
-- `Wrong.mp3` - Sound for wrong answers
-
-3. Set up a local server
+2. Set up a local server
 
 ## Server Setup
 
@@ -34,69 +30,107 @@ cd anime-guessr
 - Node.js (v14 or higher)
 - npm (Node Package Manager)
 
-### Installation
+## Prerequisites
 
-1. **Install Dependencies**
-```bash
-npm init -y
-npm install express cors
-```
+### Install Node.js and npm
+1. Download Node.js
+   - Visit [Node.js website](https://nodejs.org/)
+   - Download the LTS (Long Term Support) version for Windows
+   - Run the installer (make sure "Add to PATH" is checked)
 
-2. **Create Server File**
-```javascript
-// filepath: /D:/dev/anime-guessr/server.js
-const express = require('express');
-const cors = require('cors');
-const fs = require('fs').promises;
-const path = require('path');
+2. Verify Installation
+   ```powershell
+   # Open PowerShell and run:
+   node --version
+   npm --version
+   ```
+   You should see version numbers like `v18.17.0` and `9.6.7`
 
-const app = express();
-const port = 3000;
+### Project Setup
+1. Create Project Structure
+   ```powershell
+   # Create project directory
+   cd D:\dev
+   mkdir anime-guessr
+   cd anime-guessr
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
+   # Initialize npm project
+   npm init -y
 
-const dataPath = path.join(__dirname, 'public', 'data.json');
+   # Install dependencies
+   npm install express fs path
+   ```
 
-// API Endpoints
-app.get('/api/anime', async (req, res) => {
-    try {
-        const exists = await fs.access(dataPath).then(() => true).catch(() => false);
-        if (!exists) {
-            const defaultData = Array.from({ length: 7 }, () => []);
-            await fs.writeFile(dataPath, JSON.stringify(defaultData));
-            return res.json(defaultData);
-        }
-        
-        const data = await fs.readFile(dataPath, 'utf8');
-        res.json(JSON.parse(data));
-    } catch (error) {
-        console.error('Fehler beim Laden:', error);
-        res.status(500).send('Fehler beim Laden der Daten');
-    }
-});
+2. Create Required Files
+   ```powershell
+   # Create server file
+   New-Item -Path "server.js" -ItemType "file"
 
-app.post('/api/anime', async (req, res) => {
-    try {
-        const data = req.body;
-        if (!Array.isArray(data) || data.length !== 7) {
-            return res.status(400).send('Ungültiges Datenformat');
-        }
-        
-        await fs.writeFile(dataPath, JSON.stringify(data));
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Fehler beim Speichern:', error);
-        res.status(500).send('Fehler beim Speichern der Daten');
-    }
-});
+   # Create data directory
+   mkdir data
+   ```
 
-app.listen(port, () => {
-    console.log(`Server läuft auf http://localhost:${port}`);
-});
-```
+3. Server Configuration (server.js)
+   ```javascript
+   // filepath: /D:/dev/anime-guessr/server.js
+   const express = require('express');
+   const fs = require('fs');
+   const path = require('path');
+   const app = express();
+   const PORT = 3000;
+   const DATA_FILE = path.join(__dirname, 'anime_data.json');
 
+   // Middleware
+   app.use(express.static(__dirname));
+   app.use(express.json({ limit: '1mb' }));
+
+   // Initialize data file if it doesn't exist
+   if (!fs.existsSync(DATA_FILE)) {
+       const initialData = Array.from({ length: 7 }, () => []);
+       fs.writeFileSync(DATA_FILE, JSON.stringify(initialData, null, 2), 'utf8');
+       console.log('Data file initialized');
+   }
+
+   // API endpoints
+   app.get('/api/anime', (req, res) => {
+       fs.readFile(DATA_FILE, 'utf8', (err, data) => {
+           if (err) {
+               console.error('Error reading file:', err);
+               return res.status(500).json({ error: 'Error loading data' });
+           }
+           try {
+               res.json(JSON.parse(data));
+           } catch (parseError) {
+               console.error('Error parsing JSON:', parseError);
+               res.status(500).json({ error: 'Error parsing data' });
+           }
+       });
+   });
+
+   app.post('/api/anime', (req, res) => {
+       if (!req.body || !Array.isArray(req.body) || req.body.length !== 7) {
+           return res.status(400).json({ error: 'Invalid data format' });
+       }
+       
+       const newData = JSON.stringify(req.body, null, 2);
+       fs.writeFile(DATA_FILE, newData, 'utf8', (err) => {
+           if (err) {
+               console.error('Error writing file:', err);
+               return res.status(500).json({ error: 'Error saving data' });
+           }
+           res.json({ message: 'Data saved successfully' });
+       });
+   });
+
+   // Start server
+   app.listen(PORT, () => {
+       console.log(`Server running at http://localhost:${PORT}`);
+       console.log(`Data is stored in ${DATA_FILE}`);
+   });
+   ```
+
+### Next Steps
+After setting up the prerequisites, proceed to the [Server Setup](#server-setup) section to configure the application.
 3. **Project Structure**
 ```
 anime-guessr/
