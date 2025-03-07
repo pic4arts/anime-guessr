@@ -127,39 +127,6 @@ cd anime-guessr
    });
    ```
 
-### Next Steps
-After setting up the prerequisites, proceed to the [Server Setup](#server-setup) section to configure the application.
-
-3. **Project Structure**
-```
-anime-guessr/
-├── public/
-│   ├── index.html
-│   ├── sounds/
-│   │   ├── Correct.wav
-│   │   └── Wrong.mp3
-│   └── data.json (will be created automatically)
-├── server.js
-├── package.json
-└── README.md
-```
-
-4. **Update package.json**
-```json
-{
-  "name": "anime-guessr",
-  "version": "1.0.0",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "express": "^4.17.1",
-    "cors": "^2.8.5"
-  }
-}
-```
-
 ### Running the Server
 
 1. **Start the Server**
