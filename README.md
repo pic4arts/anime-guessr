@@ -30,8 +30,6 @@ cd anime-guessr
 - Node.js (v14 or higher)
 - npm (Node Package Manager)
 
-## Prerequisites
-
 ### Install Node.js and npm
 1. Download Node.js
    - Visit [Node.js website](https://nodejs.org/)
