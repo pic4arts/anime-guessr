@@ -4,9 +4,10 @@ const path = require('path');
 const app = express();
 const PORT = 3000;
 const DATA_FILE = path.join(__dirname, 'anime_data.json');
+const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // Middleware - muss vor den Routes stehen
-app.use(express.static(__dirname));
+app.use(express.static(PUBLIC_DIR));
 app.use(express.json({ limit: '1mb' }));  // Größeres Limit für große JSON-Objekte
 
 // Überprüfen, ob die Datei existiert
