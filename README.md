@@ -39,7 +39,7 @@ A web-based application for managing and tracking anime titles across multiple A
 1. **Download the latest release**
    - Download `anime-guessr.zip` from the Releases page
    - Extract to your preferred location
-   - Run `dist/anime-guessr.exe` to launch the application
+   - Run `start.bat` to launch the application
 
 2. **Manual Setup (Development)**
 ```powershell
