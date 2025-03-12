@@ -18,6 +18,7 @@ A web-based application for managing and tracking anime titles across multiple A
 
 1. **Adding Anime**
    - Type or paste one or multiple anime titles in the textarea
+   - Each entry is separated by a line break
    - Press "Hinzufügen" or Enter to add them
 
 2. **Managing Entries**
