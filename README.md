@@ -1,6 +1,6 @@
 # Anime Guessr
 
-A Node.js web application for managing and tracking anime titles in AMV (Anime Music Video) lists. Built for quiz games and AMV guessing challenges, featuring local data persistence and real-time search.
+A web-based application for managing and tracking anime titles across multiple AMV (Anime Music Video) lists. Perfect for anime quiz games or AMV guessing challenges.
 
 ## Features
 
