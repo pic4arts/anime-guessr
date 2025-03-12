@@ -1,0 +1,564 @@
+[
+  [
+    {
+      "name": "12345",
+      "selected": true
+    },
+    {
+      "name": "5cm per second",
+      "selected": false
+    },
+    {
+      "name": "Akame ga Kill",
+      "selected": false
+    },
+    {
+      "name": "Akebi-chan no Sailor Fuku",
+      "selected": false
+    },
+    {
+      "name": "Akudama Drive",
+      "selected": true
+    },
+    {
+      "name": "Amagami",
+      "selected": false
+    },
+    {
+      "name": "Amagi Brilliant Park",
+      "selected": true
+    },
+    {
+      "name": "Angel Beats",
+      "selected": true
+    },
+    {
+      "name": "ArpieL (game)",
+      "selected": false
+    },
+    {
+      "name": "B The Beginning",
+      "selected": false
+    },
+    {
+      "name": "Baccano",
+      "selected": true
+    },
+    {
+      "name": "Black Fox",
+      "selected": false
+    },
+    {
+      "name": "Black Lagoon",
+      "selected": true
+    },
+    {
+      "name": "Black Rock Shooter",
+      "selected": true
+    },
+    {
+      "name": "Blood-C",
+      "selected": true
+    },
+    {
+      "name": "Bocchi The Rock!",
+      "selected": true
+    },
+    {
+      "name": "Bofuri",
+      "selected": false
+    },
+    {
+      "name": "Boku no Hero Academia",
+      "selected": false
+    },
+    {
+      "name": "Bungou Stray Dogs",
+      "selected": false
+    },
+    {
+      "name": "Chainsaw Man",
+      "selected": true
+    },
+    {
+      "name": "Charlotte",
+      "selected": false
+    },
+    {
+      "name": "Clannad",
+      "selected": false
+    },
+    {
+      "name": "Classroom of the Elite",
+      "selected": false
+    },
+    {
+      "name": "Cyberpunk Edgerunners",
+      "selected": false
+    },
+    {
+      "name": "Danganronpa",
+      "selected": false
+    },
+    {
+      "name": "Danmachi",
+      "selected": false
+    },
+    {
+      "name": "Danshi Koukousei no Nichijou",
+      "selected": false
+    },
+    {
+      "name": "Darling In The FranXX",
+      "selected": false
+    },
+    {
+      "name": "Darwin's Game",
+      "selected": false
+    },
+    {
+      "name": "Date A Live",
+      "selected": false
+    },
+    {
+      "name": "Dororo",
+      "selected": false
+    },
+    {
+      "name": "Dragon Ball",
+      "selected": false
+    },
+    {
+      "name": "Dumbbell nan kilo moteru?",
+      "selected": false
+    },
+    {
+      "name": "Ega Daisuki Pompo-san",
+      "selected": false
+    },
+    {
+      "name": "Enen no Shouboutai",
+      "selected": false
+    },
+    {
+      "name": "Engage Kiss",
+      "selected": false
+    },
+    {
+      "name": "Eromanga Sensei",
+      "selected": false
+    },
+    {
+      "name": "Fate Babylonia",
+      "selected": false
+    },
+    {
+      "name": "Fate Heaven's Feel",
+      "selected": false
+    },
+    {
+      "name": "Fate Kaleid Illya",
+      "selected": false
+    },
+    {
+      "name": "Fate Unlimited Blade Works",
+      "selected": false
+    },
+    {
+      "name": "Flip Flappers",
+      "selected": false
+    },
+    {
+      "name": "Fugou Keiji Balance Unlimited",
+      "selected": false
+    },
+    {
+      "name": "Fullmetal Alchemist Brotherhood",
+      "selected": false
+    },
+    {
+      "name": "Gakusen Toshi Asterisk",
+      "selected": false
+    },
+    {
+      "name": "Gleipnir",
+      "selected": false
+    },
+    {
+      "name": "God Eater",
+      "selected": true
+    },
+    {
+      "name": "Grand Blue",
+      "selected": false
+    },
+    {
+      "name": "Guilty Crown",
+      "selected": false
+    },
+    {
+      "name": "Haifuri",
+      "selected": false
+    },
+    {
+      "name": "Hanebado",
+      "selected": false
+    },
+    {
+      "name": "Hibike Euphonium",
+      "selected": false
+    },
+    {
+      "name": "Hidan no Aria",
+      "selected": false
+    },
+    {
+      "name": "Higurashi",
+      "selected": false
+    },
+    {
+      "name": "Hinako Note",
+      "selected": false
+    },
+    {
+      "name": "Honkai Impact 3rd (game)",
+      "selected": false
+    },
+    {
+      "name": "Hyouka",
+      "selected": false
+    },
+    {
+      "name": "Inazuma Eleven",
+      "selected": false
+    },
+    {
+      "name": "Jujutsu Kaisen",
+      "selected": false
+    },
+    {
+      "name": "K Project",
+      "selected": false
+    },
+    {
+      "name": "K-On",
+      "selected": false
+    },
+    {
+      "name": "Kaguya-sama",
+      "selected": false
+    },
+    {
+      "name": "Kakegurui",
+      "selected": false
+    },
+    {
+      "name": "Kara no Kyouki",
+      "selected": false
+    },
+    {
+      "name": "Kimetsu no Yaiba",
+      "selected": false
+    },
+    {
+      "name": "Kimi no Na Wa",
+      "selected": false
+    },
+    {
+      "name": "Kimi to Nami ni Noretara",
+      "selected": false
+    },
+    {
+      "name": "Kishuku Gakkou no Juliet",
+      "selected": false
+    },
+    {
+      "name": "Komi-san",
+      "selected": false
+    },
+    {
+      "name": "Konosuba",
+      "selected": false
+    },
+    {
+      "name": "Kore wa Zombie Desu Ka?",
+      "selected": false
+    },
+    {
+      "name": "Koutetsujou no Kabaneri",
+      "selected": false
+    },
+    {
+      "name": "Kyoukai no Kanata",
+      "selected": false
+    },
+    {
+      "name": "Line (PV)",
+      "selected": false
+    },
+    {
+      "name": "Link Click",
+      "selected": false
+    },
+    {
+      "name": "Lycoris Recoil",
+      "selected": false
+    },
+    {
+      "name": "Madoka Gaiden",
+      "selected": true
+    },
+    {
+      "name": "Mahou Shoujo Site",
+      "selected": false
+    },
+    {
+      "name": "Majo no Tabitabi",
+      "selected": false
+    },
+    {
+      "name": "Megalo Box",
+      "selected": false
+    },
+    {
+      "name": "Mirai Nikki",
+      "selected": false
+    },
+    {
+      "name": "Mob Psycho 100",
+      "selected": false
+    },
+    {
+      "name": "Monogatari Series",
+      "selected": false
+    },
+    {
+      "name": "Mononoke Hime",
+      "selected": false
+    },
+    {
+      "name": "Musaigen no Phantom World",
+      "selected": false
+    },
+    {
+      "name": "Mushoku Tensei",
+      "selected": false
+    },
+    {
+      "name": "Nichijou",
+      "selected": false
+    },
+    {
+      "name": "Noragami",
+      "selected": false
+    },
+    {
+      "name": "Oda Nobuna no Yabou",
+      "selected": false
+    },
+    {
+      "name": "One Piece",
+      "selected": false
+    },
+    {
+      "name": "One Punch Man",
+      "selected": false
+    },
+    {
+      "name": "Owari no Seraph",
+      "selected": false
+    },
+    {
+      "name": "Peach Boy Riverside",
+      "selected": false
+    },
+    {
+      "name": "Plastic Memories",
+      "selected": false
+    },
+    {
+      "name": "Princess Connect",
+      "selected": false
+    },
+    {
+      "name": "Prison School",
+      "selected": false
+    },
+    {
+      "name": "Puella Magi Madoka Magica",
+      "selected": true
+    },
+    {
+      "name": "Rakudai Kishi no Cavalry",
+      "selected": false
+    },
+    {
+      "name": "Rolling Girls",
+      "selected": false
+    },
+    {
+      "name": "Sasami-san @ ganbaranai",
+      "selected": false
+    },
+    {
+      "name": "Scissor Seven",
+      "selected": false
+    },
+    {
+      "name": "Sekai Saikou no Ansatsusha",
+      "selected": false
+    },
+    {
+      "name": "Senran Kagura",
+      "selected": false
+    },
+    {
+      "name": "Sentouin Hakenshimasu",
+      "selected": false
+    },
+    {
+      "name": "Shingeki no Kyojin",
+      "selected": true
+    },
+    {
+      "name": "Shoujo Kageki Revue Starlight",
+      "selected": false
+    },
+    {
+      "name": "Shoujo Shuumatsu Ryouko",
+      "selected": false
+    },
+    {
+      "name": "Sirius The Jaeger",
+      "selected": false
+    },
+    {
+      "name": "Strike The Blood",
+      "selected": false
+    },
+    {
+      "name": "Sukasuka",
+      "selected": false
+    },
+    {
+      "name": "Sukasuka / Shuumatsu Nani Shitemasu ka? Isogashii desu ka? Sukutte Moratte Ii desu ka?",
+      "selected": false
+    },
+    {
+      "name": "Summertime Rendering",
+      "selected": false
+    },
+    {
+      "name": "Sword Art Online",
+      "selected": false
+    },
+    {
+      "name": "Sword Art Online Progressive",
+      "selected": false
+    },
+    {
+      "name": "Sword Of The Stranger",
+      "selected": false
+    },
+    {
+      "name": "Taboo Tattoo",
+      "selected": false
+    },
+    {
+      "name": "Tagaki-san",
+      "selected": false
+    },
+    {
+      "name": "Takt Op Destiny",
+      "selected": false
+    },
+    {
+      "name": "Tamako Market",
+      "selected": false
+    },
+    {
+      "name": "Tejina-senpai",
+      "selected": false
+    },
+    {
+      "name": "Tenki no Ko",
+      "selected": false
+    },
+    {
+      "name": "Toaru Majutsu no Index",
+      "selected": false
+    },
+    {
+      "name": "Tokyo Ghoul",
+      "selected": false
+    },
+    {
+      "name": "Touhou",
+      "selected": false
+    },
+    {
+      "name": "Touken Ranbou",
+      "selected": false
+    },
+    {
+      "name": "Trinity Seven",
+      "selected": false
+    },
+    {
+      "name": "Tsukihime Remake (PV)",
+      "selected": false
+    },
+    {
+      "name": "Uma Musume",
+      "selected": false
+    },
+    {
+      "name": "Uzaki-chan",
+      "selected": false
+    },
+    {
+      "name": "Vinland Saga",
+      "selected": false
+    },
+    {
+      "name": "Violet Evergarden",
+      "selected": false
+    },
+    {
+      "name": "Vivy Fluorite Eyes Song",
+      "selected": false
+    },
+    {
+      "name": "warum bist du so ein behinderter hurensohn alter fick dich",
+      "selected": false
+    },
+    {
+      "name": "Wonder Egg Priority",
+      "selected": false
+    },
+    {
+      "name": "YuruYuri",
+      "selected": false
+    },
+    {
+      "name": "Zombieland Saga",
+      "selected": false
+    }
+  ],
+  [],
+  [
+    {
+      "name": "test",
+      "selected": false
+    }
+  ],
+  [],
+  [
+    {
+      "name": "Sasuke",
+      "selected": true
+    }
+  ],
+  [],
+  []
+]
