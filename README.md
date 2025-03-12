@@ -4,19 +4,41 @@ A Node.js web application for managing and tracking anime titles in AMV (Anime M
 
 ## Features
 
-- 🎬 7 separate AMV lists for organizing content
-- 🔍 Real-time search functionality
-- ✅ Track completed/selected entries
+- 📝 Manage 7 different AMV lists
+- 🔍 Search functionality with real-time filtering
+- ✅ Mark entries as selected/completed
+- ➕ Add multiple anime titles at once
+- 📝 Edit existing entries
+- 🗑️ Delete entries
 - 🔊 Sound feedback for actions
-- 💾 Local data persistence
-- ⌨️ Keyboard shortcuts for quick actions
+- 💾 Automatic data saving
+- 🎯 Quick marking of search results
+
+## Usage
+
+1. **Adding Anime**
+   - Type or paste one or multiple anime titles in the textarea
+   - Press "Hinzufügen" or Enter to add them
+
+2. **Managing Entries**
+   - Click an entry to mark it as selected
+   - Use the edit button (✏️) to modify an entry
+   - Use the delete button (🗑️) to remove an entry
+
+3. **Searching**
+   - Type in the search box to filter entries
+   - Press Enter while searching to mark all filtered entries
+
+4. **Saving Data**
+   - Click "Daten speichern" to manually save changes
+   - Changes are also saved automatically after modifications
 
 ## Installation
 
 1. **Download the latest release**
    - Download `anime-guessr.zip` from the Releases page
    - Extract to your preferred location
-   - Run `start.bat` to launch the application
+   - Run `dist/anime-guessr.exe` to launch the application
 
 2. **Manual Setup (Development)**
 ```powershell
