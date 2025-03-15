@@ -85,7 +85,7 @@ anime-guessr/
 
 2. Verify Installation:
    ```powershell
-   # Open PowerShell and run:
+   # Open Terminal and run:
    node --version
    npm --version
    ```
