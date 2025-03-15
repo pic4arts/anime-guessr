@@ -73,11 +73,25 @@ anime-guessr/
 └── .gitignore             # Git ignore rules
 ```
 
-## Development
+## Prerequisites Installation
 
-### Prerequisites
-- Node.js (v14 or higher)
-- npm (Node Package Manager)
+### 1. Install Node.js and npm
+1. Download Node.js:
+   - Visit [Node.js website](https://nodejs.org/)
+   - Download the LTS (Long Term Support) version for Windows
+   - Run the installer
+   - Make sure to check "Automatically install necessary tools" during installation
+   - Click "Next" and "Install"
+
+2. Verify Installation:
+   ```powershell
+   # Open PowerShell and run:
+   node --version
+   npm --version
+   ```
+   You should see version numbers like `v18.x.x` and `9.x.x`
+
+## Development
 
 ### Building the Executable
 
