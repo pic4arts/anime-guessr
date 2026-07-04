@@ -3,6 +3,7 @@ const fs = require('fs');
 const http = require('http');
 const os = require('os');
 const path = require('path');
+const vm = require('vm');
 
 const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'anime-guessr-test-'));
 process.env.ANIME_DATA_FILE = path.join(temporaryDirectory, 'anime_data.json');
@@ -13,7 +14,7 @@ fs.writeFileSync(
     'utf8'
 );
 
-const { app } = require('../server');
+const { app, retryDelayFromHeaders } = require('../server');
 
 function request(port, pathname, options = {}) {
     return new Promise((resolve, reject) => {
@@ -57,6 +58,12 @@ function request(port, pathname, options = {}) {
 }
 
 async function main() {
+    assert.strictEqual(
+        retryDelayFromHeaders({ 'retry-after': '2' }),
+        2000,
+        'Retry-After wird nicht korrekt ausgewertet'
+    );
+
     const testServer = app.listen(0, '127.0.0.1');
     await new Promise((resolve, reject) => {
         testServer.once('listening', resolve);
@@ -88,6 +95,18 @@ async function main() {
             'Japanischer Originaltitel fehlt'
         );
 
+        const resolved = await request(port, '/api/catalog/resolve', {
+            method: 'POST',
+            body: {
+                queries: ['Death Note', 'Frieren', 'Kein Anime mit diesem Fantasienamen 12345'],
+            },
+        });
+        assert.strictEqual(resolved.status, 200);
+        assert.strictEqual(resolved.body.length, 3);
+        assert.ok(resolved.body[0].match.anilistId, 'AniList-Verknüpfung fehlt');
+        assert.ok(resolved.body[1].match.anilistId, 'Mehrfachsuche findet Frieren nicht');
+        assert.strictEqual(resolved.body[2].match, null, 'Unbekannter Titel wurde fälschlich aufgelöst');
+
         const lists = [
             [{
                 catalogId: english.body[0].id,
@@ -116,6 +135,13 @@ async function main() {
         assert.strictEqual(page.status, 200);
         assert.ok(page.body.includes('Anime hinzufügen'));
         assert.ok(page.body.includes('catalogSearch'));
+        assert.ok(page.body.includes('Ein Titel pro Zeile'));
+        const embeddedScript = page.body.match(/<script>([\s\S]*?)<\/script>/);
+        assert.ok(embeddedScript, 'Frontend-Script fehlt');
+        assert.doesNotThrow(
+            () => new vm.Script(embeddedScript[1]),
+            'Frontend-Script enthält einen Syntaxfehler'
+        );
 
         console.log('Smoke-Test erfolgreich: Katalogsuche, Sprachen, Persistenz und Frontend.');
     } finally {

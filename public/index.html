@@ -71,7 +71,8 @@
         }
 
         button,
-        input {
+        input,
+        textarea {
             font: inherit;
         }
 
@@ -165,7 +166,8 @@
         }
 
         input[type="search"],
-        input[type="text"] {
+        input[type="text"],
+        textarea {
             width: 100%;
             padding: 11px 13px;
             border: 1px solid var(--border);
@@ -176,11 +178,13 @@
             transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        input::placeholder {
+        input::placeholder,
+        textarea::placeholder {
             color: #868691;
         }
 
-        input:focus {
+        input:focus,
+        textarea:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(0, 225, 231, 0.14);
         }
@@ -322,9 +326,12 @@
 
         #catalogSearch {
             flex: 1;
+            min-height: 92px;
+            resize: vertical;
         }
 
         #addButton {
+            align-self: flex-start;
             padding: 10px 16px;
             border: 0;
             border-radius: 9px;
@@ -538,6 +545,10 @@
                 flex-direction: column;
             }
 
+            #addButton {
+                width: 100%;
+            }
+
             .tabs {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
@@ -580,18 +591,18 @@
 
         <section class="add-section">
             <h2 class="add-heading">Anime hinzufügen</h2>
-            <p class="add-hint">Suche nach deutschem, englischem, Romaji- oder Originaltitel.</p>
+            <p class="add-hint">Ein Titel pro Zeile. Jeder Anime wird im AniList-Katalog gesucht.</p>
             <div class="catalog-search-wrap">
                 <div class="add-controls">
-                    <input
-                        type="search"
+                    <textarea
                         id="catalogSearch"
-                        placeholder="Zum Beispiel: Frieren oder 葬送のフリーレン"
+                        rows="3"
+                        placeholder="Frieren&#10;Death Note&#10;Attack on Titan"
                         autocomplete="off"
-                        aria-label="Offline-Katalog durchsuchen"
+                        aria-label="AniList-Katalog durchsuchen, ein Anime pro Zeile"
                         aria-controls="catalogResults"
                         aria-expanded="false"
-                    >
+                    ></textarea>
                     <button id="addButton" type="button" disabled>Hinzufügen</button>
                 </div>
                 <div id="catalogResults" class="catalog-results" role="listbox"></div>
@@ -756,6 +767,9 @@
                     method: 'POST',
                 });
                 const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || `HTTP ${response.status}`);
+                }
 
                 if (result.titles) {
                     anime.titles = { ...anime.titles, ...result.titles };
@@ -770,6 +784,8 @@
                 }
             } catch (error) {
                 console.info('Bild bleibt vorerst ohne Offline-Cache:', error.message);
+            } finally {
+                imageRequests.delete(anime.catalogId);
             }
         }
 
@@ -907,6 +923,22 @@
             return values.join(' · ');
         }
 
+        function catalogQueries() {
+            return catalogSearchInput.value
+                .split(/\r?\n/)
+                .map(value => value.trim())
+                .filter(Boolean);
+        }
+
+        function updateAddButton() {
+            const queries = catalogQueries();
+            const isBulkInput = queries.length > 1;
+            addButton.textContent = isBulkInput
+                ? `${queries.length} hinzufügen`
+                : 'Hinzufügen';
+            addButton.disabled = isBulkInput ? false : !selectedCatalogAnime;
+        }
+
         function renderCatalogResults(results, query) {
             catalogResults.replaceChildren();
             selectedCatalogAnime = null;
@@ -949,7 +981,7 @@
                 button.addEventListener('click', () => {
                     selectedCatalogAnime = result;
                     catalogSearchInput.value = title.textContent;
-                    addButton.disabled = false;
+                    updateAddButton();
                     closeCatalogResults();
                     addButton.focus();
                 });
@@ -982,22 +1014,22 @@
         catalogSearchInput.addEventListener('input', () => {
             clearTimeout(catalogSearchTimer);
             selectedCatalogAnime = null;
-            addButton.disabled = true;
-            const query = catalogSearchInput.value.trim();
+            const queries = catalogQueries();
+            updateAddButton();
 
-            if (query.length < 2) {
+            if (queries.length !== 1 || queries[0].length < 2) {
                 closeCatalogResults();
                 catalogResults.replaceChildren();
                 return;
             }
 
-            catalogSearchTimer = setTimeout(() => searchCatalog(query), 180);
+            catalogSearchTimer = setTimeout(() => searchCatalog(queries[0]), 180);
         });
 
         catalogSearchInput.addEventListener('keydown', event => {
-            if (event.key === 'Enter' && selectedCatalogAnime) {
+            if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
                 event.preventDefault();
-                addSelectedAnime();
+                addCatalogAnime();
             } else if (event.key === 'Escape') {
                 closeCatalogResults();
             }
@@ -1032,18 +1064,12 @@
         function resetCatalogInput() {
             selectedCatalogAnime = null;
             catalogSearchInput.value = '';
-            addButton.disabled = true;
+            updateAddButton();
             closeCatalogResults();
         }
 
-        function addSelectedAnime() {
-            if (!selectedCatalogAnime) {
-                showStatus('Bitte zuerst einen Treffer aus dem Offline-Katalog auswählen.', true);
-                return;
-            }
-
-            const catalogEntry = selectedCatalogAnime;
-            const entry = {
+        function catalogEntryToAnime(catalogEntry) {
+            return {
                 catalogId: catalogEntry.id,
                 name: catalogEntry.titles?.german
                     || catalogEntry.titles?.english
@@ -1055,12 +1081,90 @@
                 image: catalogEntry.image || null,
                 selected: false,
             };
+        }
+
+        function addSelectedAnime() {
+            if (!selectedCatalogAnime) {
+                showStatus('Bitte zuerst einen Treffer aus dem Offline-Katalog auswählen.', true);
+                return;
+            }
+
+            const catalogEntry = selectedCatalogAnime;
+            const entry = catalogEntryToAnime(catalogEntry);
 
             if (addEntry(entry)) {
                 showStatus(`${entry.name} wurde hinzugefügt.`);
                 resetCatalogInput();
                 cacheAnimeImage(entry);
             }
+        }
+
+        async function addMultipleAnime(queries) {
+            addButton.disabled = true;
+            addButton.textContent = 'Suche …';
+
+            try {
+                const response = await fetch(`${API_URL}/api/catalog/resolve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ queries }),
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const resolutions = await response.json();
+                const unresolved = [];
+                let addedCount = 0;
+                let duplicateCount = 0;
+
+                resolutions.forEach(({ query, match }) => {
+                    if (!match) {
+                        unresolved.push(query);
+                        return;
+                    }
+
+                    const entry = catalogEntryToAnime(match);
+                    if (entryExists(entry)) {
+                        duplicateCount += 1;
+                        return;
+                    }
+
+                    animeData[currentList].push(entry);
+                    addedCount += 1;
+                });
+
+                if (addedCount > 0) {
+                    saveAnimeData();
+                    renderAnimeList(searchAnimeInput.value);
+                }
+
+                catalogSearchInput.value = unresolved.join('\n');
+                selectedCatalogAnime = null;
+                updateAddButton();
+
+                const messages = [`${addedCount} Anime hinzugefügt.`];
+                if (duplicateCount > 0) {
+                    messages.push(`${duplicateCount} bereits vorhanden.`);
+                }
+                if (unresolved.length > 0) {
+                    messages.push(`Nicht gefunden: ${unresolved.join(', ')}.`);
+                }
+                showStatus(messages.join(' '), addedCount === 0);
+            } catch (error) {
+                console.error('Mehrfaches Hinzufügen fehlgeschlagen:', error);
+                showStatus('Die Anime konnten nicht im AniList-Katalog gesucht werden.', true);
+                updateAddButton();
+            }
+        }
+
+        function addCatalogAnime() {
+            const queries = catalogQueries();
+            if (queries.length > 1) {
+                addMultipleAnime(queries);
+                return;
+            }
+            addSelectedAnime();
         }
 
         function addManualAnime(name) {
@@ -1075,7 +1179,7 @@
             }
         }
 
-        addButton.addEventListener('click', addSelectedAnime);
+        addButton.addEventListener('click', addCatalogAnime);
 
         searchAnimeInput.addEventListener('input', () => {
             renderAnimeList(searchAnimeInput.value);

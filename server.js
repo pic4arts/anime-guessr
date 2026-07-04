@@ -22,7 +22,14 @@ const CATALOG_CANDIDATES = [
     path.join(PROJECT_DIR, 'data', 'anime_catalog.json'),
 ];
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const ANILIST_REQUEST_INTERVAL_MS = 2100;
+const IMAGE_REQUEST_INTERVAL_MS = 500;
+const MAX_RATE_LIMIT_RETRIES = 2;
 let writeQueue = Promise.resolve();
+let aniListRequestQueue = Promise.resolve();
+let imageRequestQueue = Promise.resolve();
+let lastAniListRequestAt = 0;
+let lastImageRequestAt = 0;
 let server;
 
 fs.mkdirSync(IMAGE_DIR, { recursive: true });
@@ -180,18 +187,18 @@ app.get('/api/catalog/status', (req, res) => {
     });
 });
 
-app.get('/api/catalog/search', (req, res) => {
-    const query = normalizeSearchText(req.query.q);
+function findCatalogEntries(queryValue, requestedLimit = 12, requireAniList = false) {
+    const query = normalizeSearchText(queryValue);
 
     if (query.length < 2) {
-        return res.json([]);
+        return [];
     }
 
-    const limit = Math.min(Math.max(Number(req.query.limit) || 12, 1), 25);
+    const limit = Math.min(Math.max(Number(requestedLimit) || 12, 1), 25);
     const matches = [];
 
     for (const entry of catalog.anime) {
-        if (!entry._searchText.includes(query)) {
+        if ((requireAniList && !entry.anilistId) || !entry._searchText.includes(query)) {
             continue;
         }
 
@@ -238,7 +245,33 @@ app.get('/api/catalog/search', (req, res) => {
         }
     }
 
-    res.json(uniqueMatches);
+    return uniqueMatches;
+}
+
+app.get('/api/catalog/search', (req, res) => {
+    res.json(findCatalogEntries(req.query.q, req.query.limit));
+});
+
+app.post('/api/catalog/resolve', (req, res) => {
+    const queries = req.body?.queries;
+
+    if (
+        !Array.isArray(queries)
+        || queries.length === 0
+        || queries.length > 100
+        || queries.some(query => typeof query !== 'string' || query.length > 500)
+    ) {
+        return res.status(400).json({
+            error: 'Es werden 1 bis 100 Anime-Titel als Text erwartet.',
+        });
+    }
+
+    const results = queries.map(query => ({
+        query: query.trim(),
+        match: findCatalogEntries(query, 1, true)[0] || null,
+    }));
+
+    res.json(results);
 });
 
 app.get('/api/anime', (req, res) => {
@@ -295,6 +328,93 @@ app.post('/api/anime', async (req, res) => {
     }
 });
 
+function retryDelayFromHeaders(headers, fallbackMs = 60000) {
+    const retryAfterValue = Array.isArray(headers?.['retry-after'])
+        ? headers['retry-after'][0]
+        : headers?.['retry-after'];
+    const retryAfterSeconds = Number(retryAfterValue);
+
+    if (Number.isFinite(retryAfterSeconds) && retryAfterSeconds >= 0) {
+        return Math.max(1000, retryAfterSeconds * 1000);
+    }
+
+    if (retryAfterValue) {
+        const retryDate = Date.parse(retryAfterValue);
+        if (Number.isFinite(retryDate)) {
+            return Math.max(1000, retryDate - Date.now());
+        }
+    }
+
+    const resetValue = Array.isArray(headers?.['x-ratelimit-reset'])
+        ? headers['x-ratelimit-reset'][0]
+        : headers?.['x-ratelimit-reset'];
+    const resetTimestamp = Number(resetValue);
+    if (Number.isFinite(resetTimestamp) && resetTimestamp > 0) {
+        return Math.max(1000, resetTimestamp * 1000 - Date.now());
+    }
+
+    return fallbackMs;
+}
+
+function wait(milliseconds) {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+async function requestBufferWithRateLimitRetry(url, options = {}) {
+    for (let attempt = 0; attempt <= MAX_RATE_LIMIT_RETRIES; attempt += 1) {
+        try {
+            return await requestBuffer(url, options);
+        } catch (error) {
+            if (error.statusCode !== 429 || attempt === MAX_RATE_LIMIT_RETRIES) {
+                throw error;
+            }
+
+            console.warn(
+                `Rate-Limit erreicht. Nächster Versuch in ${Math.ceil(error.retryAfterMs / 1000)} Sekunden.`
+            );
+            await wait(error.retryAfterMs);
+        }
+    }
+
+    throw new Error('Anfrage konnte nach mehreren Versuchen nicht abgeschlossen werden');
+}
+
+function enqueueAniListRequest(task) {
+    const queuedRequest = aniListRequestQueue.then(async () => {
+        const waitTime = Math.max(
+            0,
+            lastAniListRequestAt + ANILIST_REQUEST_INTERVAL_MS - Date.now()
+        );
+        if (waitTime > 0) {
+            await wait(waitTime);
+        }
+
+        lastAniListRequestAt = Date.now();
+        return task();
+    });
+
+    aniListRequestQueue = queuedRequest.catch(() => {});
+    return queuedRequest;
+}
+
+function enqueueImageRequest(task) {
+    const queuedRequest = imageRequestQueue.then(async () => {
+        const waitTime = Math.max(
+            0,
+            lastImageRequestAt + IMAGE_REQUEST_INTERVAL_MS - Date.now()
+        );
+        if (waitTime > 0) {
+            await wait(waitTime);
+        }
+
+        lastImageRequestAt = Date.now();
+        return task();
+    });
+
+    imageRequestQueue = queuedRequest.catch(() => {});
+    return queuedRequest;
+}
+
 function requestBuffer(url, options = {}, redirectCount = 0) {
     return new Promise((resolve, reject) => {
         if (redirectCount > 5) {
@@ -324,8 +444,11 @@ function requestBuffer(url, options = {}, redirectCount = 0) {
             }
 
             if (response.statusCode < 200 || response.statusCode >= 300) {
+                const error = new Error(`HTTP ${response.statusCode}`);
+                error.statusCode = response.statusCode;
+                error.retryAfterMs = retryDelayFromHeaders(response.headers);
                 response.resume();
-                reject(new Error(`HTTP ${response.statusCode}`));
+                reject(error);
                 return;
             }
 
@@ -380,16 +503,19 @@ async function fetchAniListMedia(anilistId) {
         query,
         variables: { id: Number(anilistId) },
     });
-    const response = await requestBuffer('https://graphql.anilist.co', {
-        method: 'POST',
-        accept: 'application/json',
-        headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(body),
-        },
-        body,
-        maxBytes: 1024 * 1024,
-    });
+    const response = await enqueueAniListRequest(() => requestBufferWithRateLimitRetry(
+        'https://graphql.anilist.co',
+        {
+            method: 'POST',
+            accept: 'application/json',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(body),
+            },
+            body,
+            maxBytes: 1024 * 1024,
+        }
+    ));
     const parsed = JSON.parse(response.body.toString('utf8'));
 
     if (!parsed.data?.Media) {
@@ -416,11 +542,14 @@ async function cacheImage(entry, imageUrl) {
         return existing;
     }
 
-    const response = await requestBuffer(imageUrl, {
-        accept: 'image/*',
-        maxBytes: MAX_IMAGE_BYTES,
-        timeout: 10000,
-    });
+    const response = await enqueueImageRequest(() => requestBufferWithRateLimitRetry(
+        imageUrl,
+        {
+            accept: 'image/*',
+            maxBytes: MAX_IMAGE_BYTES,
+            timeout: 10000,
+        }
+    ));
 
     if (!response.contentType.startsWith('image/')) {
         throw new Error('Die geladene Datei ist kein Bild');
@@ -516,5 +645,6 @@ if (require.main === module) {
 
 module.exports = {
     app,
+    retryDelayFromHeaders,
     startServer,
 };
