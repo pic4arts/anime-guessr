@@ -1,145 +1,77 @@
 # Anime Guessr
 
-A web-based application for managing and tracking anime titles across multiple AMV (Anime Music Video) lists. Perfect for anime quiz games or AMV guessing challenges.
+Lokale Webanwendung zum Verwalten von sieben AMV-Anime-Listen.
 
-## Features
+## Funktionen
 
-- 📝 Manage 7 different AMV lists
-- 🔍 Search functionality with real-time filtering
-- ✅ Mark entries as selected/completed
-- ➕ Add multiple anime titles at once
-- 📝 Edit existing entries
-- 🗑️ Delete entries
-- 🔊 Sound feedback for actions
-- 💾 Automatic data saving
-- 🎯 Quick marking of search results
+- Sieben getrennte AMV-Listen
+- Lokaler Offline-Katalog mit deutscher, englischer, Romaji- und Originalschreibweise
+- Autocomplete-Suche ohne Internetverbindung
+- Auswahl, Bearbeitung und Löschen von Listeneinträgen
+- Automatisches, lokales Speichern in `anime_data.json`
+- Optionale Banner-/Cover-Vorschau beim Überfahren eines Anime
+- Einmal geladene Bilder funktionieren anschließend offline
+- Bestehende Einträge im alten Format `{ "name": "...", "selected": false }` bleiben kompatibel
 
-## Usage
+## Start
 
-1. **Adding Anime**
-   - Type or paste one or multiple anime titles in the textarea
-   - Each entry is separated by a line break
-   - Press "Hinzufügen" or Enter to add them
-
-2. **Managing Entries**
-   - Click an entry to mark it as selected
-   - Use the edit button (✏️) to modify an entry
-   - Use the delete button (🗑️) to remove an entry
-
-3. **Searching**
-   - Type in the search box to filter entries
-   - Press Enter while searching to mark all filtered entries
-
-4. **Saving Data**
-   - Click "Daten speichern" to manually save changes
-   - Changes are also saved automatically after modifications
-
-## Installation
-
-1. **Download the latest release**
-   - Download `anime-guessr.zip` from the Releases page
-   - Extract to your preferred location
-   - Run `start.bat` to launch the application
-
-2. **Manual Setup (Development)**
 ```powershell
-# Clone repository
-git clone https://github.com/pic4arts/anime-guessr.git
-cd anime-guessr
-
-# Install dependencies
 npm install
-
-# Build executable
-npm run build
-
-# Start application
-.\start.bat
-```
-
-## Project Structure
-
-```plaintext
-anime-guessr/
-├── public/
-│   ├── index.html          # Frontend interface
-│   └── sounds/             # Audio feedback files
-│       ├── Correct.wav
-│       └── Wrong.mp3
-├── server.js               # Node.js backend
-├── start.js               # Server startup script
-├── start.bat              # Windows startup batch file
-├── package.json           # Project configuration
-└── .gitignore             # Git ignore rules
-```
-
-## Prerequisites Installation
-
-### 1. Install Node.js and npm
-1. Download Node.js:
-   - Visit [Node.js website](https://nodejs.org/)
-   - Download the LTS (Long Term Support) version for Windows
-   - Run the installer
-   - Make sure to check "Automatically install necessary tools" during installation
-   - Click "Next" and "Install"
-
-2. Verify Installation:
-   ```powershell
-   # Open Terminal and run:
-   node --version
-   npm --version
-   ```
-   You should see version numbers like `v18.x.x` and `9.x.x`
-
-## Development
-
-### Building the Executable
-
-```powershell
-# Install dependencies
-npm install
-
-# Build executable
-npm run build
-```
-
-### Development Server
-
-```powershell
-# Start server in development mode
 npm start
 ```
 
-The application will be available at `http://localhost:3000`
+Danach ist die Anwendung unter `http://localhost:3000` erreichbar.
 
-## Data Storage
+## Vollständigen Offline-Katalog erzeugen
 
-- All data is stored locally in `anime_data.json`
-- Each AMV list is saved independently
-- Data persists between sessions
-- Automatic saving after modifications
+Das Repository enthält einen kleinen Startkatalog, damit die Funktion direkt ausprobiert werden kann. Für den vollständigen Katalog:
 
-## Troubleshooting
+```powershell
+npm run update-catalog
+```
 
-1. **Server won't start**
-   - Check if port 3000 is available
-   - Ensure Node.js is installed correctly
-   - Check console for error messages
+Dieser Befehl lädt die aktuelle `anime-offline-database` und den mehrsprachigen AniDB-Titeldump, führt beide zusammen und schreibt das Ergebnis nach `data/anime_catalog.json`. Die Aktualisierung benötigt Internet; die spätere Suche nicht.
 
-2. **Sound not working**
-   - Verify sound files exist in `public/sounds/`
-   - Check system audio settings
-   - Try refreshing the page
+AniDB bittet darum, den Titeldump höchstens einmal täglich abzurufen.
 
-3. **Changes not saving**
-   - Check write permissions in application directory
-   - Verify `anime_data.json` is not read-only
-   - Check console for save errors
+## Bedienung
 
-## License
+1. Im Feld „Anime hinzufügen“ mindestens zwei Zeichen eingeben.
+2. Einen Treffer aus dem lokalen Katalog auswählen.
+3. „Hinzufügen“ drücken.
+4. Beim Hinzufügen versucht die Anwendung im Hintergrund, ein Banner oder Cover zu speichern. Ohne Internet wird der Anime trotzdem hinzugefügt.
+5. Ein Klick auf einen Listeneintrag markiert ihn. Enter in der Listensuche markiert alle sichtbaren Treffer.
 
-MIT License - See LICENSE file for details
+Wenn ein Anime nicht im Katalog vorhanden ist, kann er weiterhin als eigener Titel hinzugefügt werden.
 
-## Author
+## Datenspeicherung
 
-pic4arts
+| Pfad | Inhalt |
+| --- | --- |
+| `anime_data.json` | Persönliche AMV-Listen |
+| `data/anime_catalog.json` | Lokal durchsuchbarer Anime-Katalog |
+| `data/images/` | Lokal gespeicherte Banner und Cover |
+
+Der Katalog und die Bilder werden nicht für die normale Nutzung aus dem Internet nachgeladen. Nur das optionale Speichern eines Bildes benötigt beim ersten Mal eine Verbindung.
+
+## Build
+
+```powershell
+npm run build
+```
+
+Die statischen Dateien und der Startkatalog werden über die `pkg`-Konfiguration in den Build aufgenommen. Persönliche Listen und gecachte Bilder werden neben der ausführbaren Datei gespeichert.
+
+## Tests
+
+```powershell
+npm test
+```
+
+Der Smoke-Test verwendet ein isoliertes temporäres Verzeichnis und verändert die echten AMV-Listen nicht.
+
+## Datenquellen und Lizenzen
+
+Siehe [THIRD_PARTY_DATA.md](THIRD_PARTY_DATA.md).
+
+Der Programmcode steht unter der MIT-Lizenz. Importierte Datensätze und Bilder unterliegen ihren eigenen Bedingungen.

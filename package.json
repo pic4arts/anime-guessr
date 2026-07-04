@@ -1,22 +1,27 @@
 {
   "name": "anime-guessr",
   "version": "1.0.0",
+  "description": "Offline-first Anime Guessr for AMV lists with multilingual search, a local catalog, and cached artwork.",
   "main": "start.js",
   "bin": "start.js",
   "scripts": {
     "start": "node start.js",
-    "build": "pkg ."
+    "build": "pkg .",
+    "update-catalog": "node scripts/update-catalog.js",
+    "test": "node scripts/smoke-test.js"
   },
   "pkg": {
     "targets": [
       "node16-win-x64"
     ],
-    "outputPath": "dist"
+    "outputPath": "dist",
+    "assets": [
+      "public/**/*",
+      "data/anime_catalog.json"
+    ]
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.17.1",
-    "open": "^8.4.2"
+    "express": "^4.17.1"
   },
   "devDependencies": {
     "pkg": "^5.8.1"

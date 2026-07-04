@@ -1,3 +1,5 @@
 node_modules/
 anime_data.json
 .env
+data/images/
+*.tmp
