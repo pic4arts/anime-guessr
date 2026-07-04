@@ -165,6 +165,7 @@ async function main() {
         assert.ok(page.body.includes('Ein Titel pro Zeile'));
         assert.ok(page.body.includes('participantMatch'));
         assert.ok(page.body.includes('Als Gewinner wählen'));
+        assert.ok(page.body.includes('markedAnimeCount'));
         const embeddedScript = page.body.match(/<script>([\s\S]*?)<\/script>/);
         assert.ok(embeddedScript, 'Frontend-Script fehlt');
         assert.doesNotThrow(

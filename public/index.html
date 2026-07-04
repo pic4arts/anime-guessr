@@ -313,6 +313,35 @@
             margin-bottom: 14px;
         }
 
+        .list-stats {
+            margin: -3px 0 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            color: var(--muted);
+            font-size: 0.78rem;
+        }
+
+        .list-stat {
+            padding: 5px 9px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: rgba(41, 41, 46, 0.76);
+        }
+
+        .list-stat strong {
+            margin-left: 3px;
+            color: var(--text);
+        }
+
+        .list-stat-marked strong {
+            color: var(--yellow);
+        }
+
+        .list-stat-open strong {
+            color: var(--primary);
+        }
+
         input[type="search"],
         input[type="text"],
         textarea {
@@ -763,6 +792,12 @@
             <input type="search" id="searchAnime" placeholder="Titel in dieser AMV-Liste …" autocomplete="off">
         </section>
 
+        <div class="list-stats" aria-label="Statistik der aktuellen Anime-Liste" aria-live="polite">
+            <span class="list-stat">Gesamt <strong id="totalAnimeCount">0</strong></span>
+            <span class="list-stat list-stat-marked">Markiert <strong id="markedAnimeCount">0</strong></span>
+            <span class="list-stat list-stat-open">Nicht markiert <strong id="openAnimeCount">0</strong></span>
+        </div>
+
         <ul id="animeList" aria-label="Anime in der aktuellen Liste"></ul>
 
         <section class="add-section">
@@ -834,6 +869,9 @@
         const catalogSearchInput = document.getElementById('catalogSearch');
         const catalogResults = document.getElementById('catalogResults');
         const searchAnimeInput = document.getElementById('searchAnime');
+        const totalAnimeCount = document.getElementById('totalAnimeCount');
+        const markedAnimeCount = document.getElementById('markedAnimeCount');
+        const openAnimeCount = document.getElementById('openAnimeCount');
         const statusMessage = document.getElementById('statusMessage');
         const matchHeading = document.getElementById('matchHeading');
         const matchHint = document.getElementById('matchHint');
@@ -1167,6 +1205,14 @@
             if (!Array.isArray(animeData[currentList])) {
                 animeData[currentList] = [];
             }
+
+            const totalCount = animeData[currentList].length;
+            const markedCount = animeData[currentList]
+                .filter(anime => Boolean(anime.selected))
+                .length;
+            totalAnimeCount.textContent = totalCount;
+            markedAnimeCount.textContent = markedCount;
+            openAnimeCount.textContent = totalCount - markedCount;
 
             const entries = animeData[currentList]
                 .map((anime, index) => ({ anime, index }))
