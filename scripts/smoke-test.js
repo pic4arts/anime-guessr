@@ -14,6 +14,14 @@ fs.writeFileSync(
     JSON.stringify(Array.from({ length: 7 }, () => [])),
     'utf8'
 );
+fs.writeFileSync(
+    process.env.TOURNAMENT_DATA_FILE,
+    JSON.stringify({
+        participants: Array(8).fill(''),
+        winners: Array(8).fill(null),
+    }),
+    'utf8'
+);
 
 const { app, retryDelayFromHeaders } = require('../server');
 
@@ -84,10 +92,16 @@ async function main() {
         assert.strictEqual(emptyTournament.status, 200);
         assert.deepStrictEqual(emptyTournament.body.participants, Array(8).fill(''));
         assert.deepStrictEqual(emptyTournament.body.winners, Array(8).fill(null));
+        assert.strictEqual(emptyTournament.body.amvs.length, 8);
+        assert.deepStrictEqual(emptyTournament.body.amvs[0], { name: '', youtubeUrl: '' });
 
         const tournament = {
             participants: ['Aiko', 'Ben', 'Chika', 'Dario', 'Emi', 'Finn', 'Gina', 'Haru'],
             winners: [0, 1, 0, 1, 0, 1, 1, 0],
+            amvs: Array.from({ length: 8 }, (_, index) => ({
+                name: `AMV ${index + 1}`,
+                youtubeUrl: index === 0 ? 'https://www.youtube.com/watch?v=test' : '',
+            })),
         };
         const savedTournament = await request(port, '/api/tournament', {
             method: 'POST',
@@ -166,6 +180,7 @@ async function main() {
         assert.ok(page.body.includes('participantMatch'));
         assert.ok(page.body.includes('Als Gewinner wählen'));
         assert.ok(page.body.includes('markedAnimeCount'));
+        assert.ok(page.body.includes('amvYoutubeLink'));
         const embeddedScript = page.body.match(/<script>([\s\S]*?)<\/script>/);
         assert.ok(embeddedScript, 'Frontend-Script fehlt');
         assert.doesNotThrow(

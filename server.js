@@ -68,6 +68,52 @@ function createEmptyTournamentData() {
     return {
         participants: Array(8).fill(''),
         winners: Array(8).fill(null),
+        amvs: Array.from({ length: 8 }, () => ({
+            name: '',
+            youtubeUrl: '',
+        })),
+    };
+}
+
+function normalizeTournamentData(data) {
+    if (
+        !data
+        || !Array.isArray(data.participants)
+        || data.participants.length !== 8
+        || !data.participants.every(name => typeof name === 'string' && name.length <= 100)
+        || !Array.isArray(data.winners)
+        || data.winners.length !== 8
+        || !data.winners.every(winner => winner === null || winner === 0 || winner === 1)
+    ) {
+        return null;
+    }
+
+    let amvs = data.amvs;
+    if (amvs === undefined) {
+        amvs = createEmptyTournamentData().amvs;
+    }
+    if (
+        !Array.isArray(amvs)
+        || amvs.length !== 8
+        || !amvs.every(amv => (
+            amv
+            && typeof amv === 'object'
+            && typeof amv.name === 'string'
+            && amv.name.length <= 200
+            && typeof amv.youtubeUrl === 'string'
+            && amv.youtubeUrl.length <= 500
+        ))
+    ) {
+        return null;
+    }
+
+    return {
+        participants: data.participants,
+        winners: data.winners,
+        amvs: amvs.map(amv => ({
+            name: amv.name,
+            youtubeUrl: amv.youtubeUrl,
+        })),
     };
 }
 
@@ -78,6 +124,23 @@ if (!fs.existsSync(TOURNAMENT_DATA_FILE)) {
         'utf8'
     );
     console.log('Turnier-Teilnehmer wurden initialisiert.');
+} else {
+    try {
+        const storedTournamentData = JSON.parse(
+            fs.readFileSync(TOURNAMENT_DATA_FILE, 'utf8')
+        );
+        const normalizedTournamentData = normalizeTournamentData(storedTournamentData);
+        if (normalizedTournamentData && storedTournamentData.amvs === undefined) {
+            fs.writeFileSync(
+                TOURNAMENT_DATA_FILE,
+                JSON.stringify(normalizedTournamentData, null, 2),
+                'utf8'
+            );
+            console.log('Bestehende Turnierdaten wurden um AMV-Informationen erweitert.');
+        }
+    } catch (error) {
+        console.warn('Bestehende Turnierdaten konnten nicht migriert werden:', error.message);
+    }
 }
 
 function normalizeSearchText(value) {
@@ -361,18 +424,6 @@ app.post('/api/anime', async (req, res) => {
     }
 });
 
-function isValidTournamentData(data) {
-    return Boolean(
-        data
-        && Array.isArray(data.participants)
-        && data.participants.length === 8
-        && data.participants.every(name => typeof name === 'string' && name.length <= 100)
-        && Array.isArray(data.winners)
-        && data.winners.length === 8
-        && data.winners.every(winner => winner === null || winner === 0 || winner === 1)
-    );
-}
-
 app.get('/api/tournament', (req, res) => {
     fs.readFile(TOURNAMENT_DATA_FILE, 'utf8', (error, data) => {
         if (error) {
@@ -382,10 +433,11 @@ app.get('/api/tournament', (req, res) => {
 
         try {
             const parsed = JSON.parse(data);
-            if (!isValidTournamentData(parsed)) {
+            const normalized = normalizeTournamentData(parsed);
+            if (!normalized) {
                 return res.status(500).json({ error: 'Ungültiges Turnierdatenformat' });
             }
-            res.json(parsed);
+            res.json(normalized);
         } catch (parseError) {
             console.error('Fehler beim Parsen der Turnierdaten:', parseError);
             res.status(500).json({ error: 'Fehler beim Parsen der Turnierdaten' });
@@ -394,13 +446,14 @@ app.get('/api/tournament', (req, res) => {
 });
 
 app.post('/api/tournament', async (req, res) => {
-    if (!isValidTournamentData(req.body)) {
+    const normalized = normalizeTournamentData(req.body);
+    if (!normalized) {
         return res.status(400).json({
-            error: 'Es werden acht Teilnehmer und acht Rundenergebnisse erwartet.',
+            error: 'Es werden acht Teilnehmer, Rundenergebnisse und AMV-Einträge erwartet.',
         });
     }
 
-    const newData = JSON.stringify(req.body, null, 2);
+    const newData = JSON.stringify(normalized, null, 2);
     const writeOperation = tournamentWriteQueue.then(async () => {
         await fs.promises.writeFile(TEMP_TOURNAMENT_DATA_FILE, newData, 'utf8');
         await fs.promises.rename(TEMP_TOURNAMENT_DATA_FILE, TOURNAMENT_DATA_FILE);

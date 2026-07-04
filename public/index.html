@@ -182,6 +182,61 @@
             border-top: 1px solid var(--border);
         }
 
+        .amv-panel {
+            margin-top: -9px;
+        }
+
+        .amv-fields {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+            gap: 10px;
+        }
+
+        .amv-field {
+            min-width: 0;
+        }
+
+        .amv-link-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #amvYoutubeLink {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .amv-open-link {
+            flex: 0 0 auto;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #101010;
+            background: var(--primary);
+            font-size: 0.82rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .amv-open-link:hover {
+            background: var(--yellow);
+        }
+
+        .amv-open-link.hidden {
+            display: none;
+        }
+
+        .amv-link-hint {
+            min-height: 1.1em;
+            margin: 5px 0 0;
+            color: var(--muted);
+            font-size: 0.74rem;
+        }
+
+        .amv-link-hint.invalid {
+            color: #ff5a9c;
+        }
+
         .match-header {
             display: flex;
             align-items: flex-start;
@@ -344,6 +399,7 @@
 
         input[type="search"],
         input[type="text"],
+        input[type="url"],
         textarea {
             width: 100%;
             padding: 11px 13px;
@@ -734,6 +790,19 @@
                 grid-template-columns: 1fr;
             }
 
+            .amv-fields {
+                grid-template-columns: 1fr;
+            }
+
+            .amv-link-row {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .amv-open-link {
+                text-align: center;
+            }
+
             #addButton {
                 width: 100%;
             }
@@ -782,6 +851,45 @@
                     </div>
                 </div>
                 <div id="participantMatch" class="participant-match"></div>
+            </div>
+        </details>
+
+        <details class="tournament-panel amv-panel">
+            <summary class="tournament-summary">
+                <span class="tournament-summary-title">AMV: <span id="amvSummaryName">Noch nicht eingetragen</span></span>
+            </summary>
+            <div class="tournament-content">
+                <div class="amv-fields">
+                    <div class="amv-field">
+                        <label class="field-label" for="amvName">Name des AMV</label>
+                        <input
+                            type="text"
+                            id="amvName"
+                            maxlength="200"
+                            placeholder="Zum Beispiel: Vorrunde 1 – AMV"
+                            autocomplete="off"
+                        >
+                    </div>
+                    <div class="amv-field">
+                        <label class="field-label" for="amvYoutubeLink">YouTube-Link</label>
+                        <div class="amv-link-row">
+                            <input
+                                type="url"
+                                id="amvYoutubeLink"
+                                maxlength="500"
+                                placeholder="https://www.youtube.com/watch?v=…"
+                                autocomplete="off"
+                            >
+                            <a
+                                id="amvOpenLink"
+                                class="amv-open-link hidden"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >Video öffnen</a>
+                        </div>
+                        <p id="amvLinkHint" class="amv-link-hint"></p>
+                    </div>
+                </div>
             </div>
         </details>
 
@@ -847,6 +955,10 @@
         let tournamentData = {
             participants: Array(8).fill(''),
             winners: Array(8).fill(null),
+            amvs: Array.from({ length: 8 }, () => ({
+                name: '',
+                youtubeUrl: '',
+            })),
         };
         let currentList = 0;
         let selectedCatalogAnime = null;
@@ -877,6 +989,11 @@
         const matchHint = document.getElementById('matchHint');
         const matchResult = document.getElementById('matchResult');
         const participantMatch = document.getElementById('participantMatch');
+        const amvSummaryName = document.getElementById('amvSummaryName');
+        const amvNameInput = document.getElementById('amvName');
+        const amvYoutubeLinkInput = document.getElementById('amvYoutubeLink');
+        const amvOpenLink = document.getElementById('amvOpenLink');
+        const amvLinkHint = document.getElementById('amvLinkHint');
         const animePreview = document.getElementById('animePreview');
         const previewImage = document.getElementById('previewImage');
         const previewCaption = document.getElementById('previewCaption');
@@ -1102,6 +1219,64 @@
             });
         }
 
+        function validYouTubeUrl(value) {
+            const trimmedValue = String(value || '').trim();
+            if (!trimmedValue) {
+                return '';
+            }
+
+            try {
+                const url = new URL(trimmedValue);
+                const hostname = url.hostname.toLocaleLowerCase('en');
+                const isYouTubeHost = hostname === 'youtu.be'
+                    || hostname === 'youtube.com'
+                    || hostname.endsWith('.youtube.com');
+                if (!['http:', 'https:'].includes(url.protocol) || !isYouTubeHost) {
+                    return '';
+                }
+                return url.toString();
+            } catch (error) {
+                return '';
+            }
+        }
+
+        function updateAmvLink() {
+            const rawUrl = amvYoutubeLinkInput.value.trim();
+            const youtubeUrl = validYouTubeUrl(rawUrl);
+            amvOpenLink.classList.toggle('hidden', !youtubeUrl);
+            amvOpenLink.removeAttribute('href');
+            amvLinkHint.classList.toggle('invalid', Boolean(rawUrl && !youtubeUrl));
+
+            if (youtubeUrl) {
+                amvOpenLink.href = youtubeUrl;
+                amvLinkHint.textContent = '';
+            } else {
+                amvLinkHint.textContent = rawUrl
+                    ? 'Bitte einen gültigen Link von youtube.com oder youtu.be eingeben.'
+                    : '';
+            }
+        }
+
+        function renderAmvDetails() {
+            const amv = tournamentData.amvs[currentList];
+            amvNameInput.value = amv.name;
+            amvYoutubeLinkInput.value = amv.youtubeUrl;
+            amvSummaryName.textContent = amv.name.trim() || 'Noch nicht eingetragen';
+            updateAmvLink();
+        }
+
+        amvNameInput.addEventListener('input', () => {
+            tournamentData.amvs[currentList].name = amvNameInput.value;
+            amvSummaryName.textContent = amvNameInput.value.trim() || 'Noch nicht eingetragen';
+            saveTournamentData();
+        });
+
+        amvYoutubeLinkInput.addEventListener('input', () => {
+            tournamentData.amvs[currentList].youtubeUrl = amvYoutubeLinkInput.value;
+            updateAmvLink();
+            saveTournamentData();
+        });
+
         function makeIconButton(label, className, pathData) {
             const button = document.createElement('button');
             button.type = 'button';
@@ -1312,6 +1487,7 @@
             searchAnimeInput.value = '';
             renderAnimeList();
             renderParticipantMatch();
+            renderAmvDetails();
         }
 
         tabs.forEach(tab => {
@@ -1710,10 +1886,13 @@
                     && data.participants.length === 8
                     && Array.isArray(data.winners)
                     && data.winners.length === 8
+                    && Array.isArray(data.amvs)
+                    && data.amvs.length === 8
                 ) {
                     tournamentData = data;
                 }
                 renderParticipantMatch();
+                renderAmvDetails();
             } catch (error) {
                 console.error('Fehler beim Laden der Turnierdaten:', error);
                 showStatus('Teilnehmer konnten nicht geladen werden.', true);
@@ -1767,6 +1946,7 @@
 
         renderAnimeList();
         renderParticipantMatch();
+        renderAmvDetails();
     </script>
 </body>
 </html>
