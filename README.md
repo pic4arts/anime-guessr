@@ -1,10 +1,10 @@
 # Anime Guessr
 
-Lokale Webanwendung zum Verwalten von sieben AMV-Anime-Listen.
+Lokale Webanwendung zum Verwalten von acht Turnier- und AMV-Anime-Listen.
 
 ## Funktionen
 
-- Sieben getrennte AMV-Listen
+- Vier Vorrunden, zwei Halbfinale, Spiel um Platz 3 und Finale
 - Lokaler Offline-Katalog mit deutscher, englischer, Romaji- und Originalschreibweise
 - Autocomplete-Suche ohne Internetverbindung
 - Auswahl, Bearbeitung und Löschen von Listeneinträgen

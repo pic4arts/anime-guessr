@@ -7,6 +7,11 @@ const path = require('path');
 const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'anime-guessr-test-'));
 process.env.ANIME_DATA_FILE = path.join(temporaryDirectory, 'anime_data.json');
 process.env.ANIME_IMAGE_DIR = path.join(temporaryDirectory, 'images');
+fs.writeFileSync(
+    process.env.ANIME_DATA_FILE,
+    JSON.stringify(Array.from({ length: 7 }, () => [])),
+    'utf8'
+);
 
 const { app } = require('../server');
 
@@ -64,6 +69,9 @@ async function main() {
         assert.strictEqual(status.status, 200);
         assert.ok(status.body.count > 40000, 'Der Offline-Katalog ist unvollständig');
 
+        const migrated = await request(port, '/api/anime');
+        assert.strictEqual(migrated.body.length, 8, 'Sieben bestehende Listen wurden nicht migriert');
+
         const german = await request(port, '/api/catalog/search?q=Apothekerin&limit=1');
         assert.strictEqual(german.status, 200);
         assert.ok(german.body[0].titles.german, 'Deutscher Titel fehlt');
@@ -87,6 +95,7 @@ async function main() {
                 titles: english.body[0].titles,
                 selected: false,
             }],
+            [],
             [],
             [],
             [],

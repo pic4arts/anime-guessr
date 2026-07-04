@@ -6,6 +6,7 @@ const https = require('https');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
+const LIST_COUNT = 8;
 const PROJECT_DIR = __dirname;
 const RUNTIME_DIR = process.pkg ? path.dirname(process.execPath) : PROJECT_DIR;
 const PUBLIC_DIR = path.join(PROJECT_DIR, 'public');
@@ -34,9 +35,20 @@ app.use('/anime-images', express.static(IMAGE_DIR, {
 app.use(express.json({ limit: '5mb' }));
 
 if (!fs.existsSync(DATA_FILE)) {
-    const initialData = Array.from({ length: 7 }, () => []);
+    const initialData = Array.from({ length: LIST_COUNT }, () => []);
     fs.writeFileSync(DATA_FILE, JSON.stringify(initialData, null, 2), 'utf8');
     console.log('Anime-Listen wurden initialisiert.');
+} else {
+    try {
+        const storedData = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+        if (Array.isArray(storedData) && storedData.length === LIST_COUNT - 1) {
+            storedData.push([]);
+            fs.writeFileSync(DATA_FILE, JSON.stringify(storedData, null, 2), 'utf8');
+            console.log('Anime-Listen wurden von sieben auf acht Listen erweitert.');
+        }
+    } catch (error) {
+        console.warn('Bestehende Anime-Listen konnten beim Start nicht migriert werden:', error.message);
+    }
 }
 
 function normalizeSearchText(value) {
@@ -246,7 +258,7 @@ app.get('/api/anime', (req, res) => {
 });
 
 function isValidAnimeData(data) {
-    if (!Array.isArray(data) || data.length !== 7) {
+    if (!Array.isArray(data) || data.length !== LIST_COUNT) {
         return false;
     }
 
@@ -262,7 +274,7 @@ function isValidAnimeData(data) {
 app.post('/api/anime', async (req, res) => {
     if (!isValidAnimeData(req.body)) {
         return res.status(400).json({
-            error: 'Ungültiges Datenformat. Es werden sieben Anime-Listen erwartet.',
+            error: 'Ungültiges Datenformat. Es werden acht Anime-Listen erwartet.',
         });
     }
 

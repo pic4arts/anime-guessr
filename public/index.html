@@ -106,16 +106,15 @@
 
         .tabs {
             display: grid;
-            grid-template-columns: repeat(7, minmax(62px, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 4px;
             margin-bottom: 22px;
-            overflow-x: auto;
-            border-bottom: 1px solid var(--border);
         }
 
         .tab {
-            min-width: 62px;
             padding: 11px 8px;
             border-bottom: 3px solid transparent;
+            border-radius: 7px 7px 0 0;
             text-align: center;
             cursor: pointer;
             transition: background-color 0.2s, border-color 0.2s;
@@ -539,6 +538,10 @@
                 flex-direction: column;
             }
 
+            .tabs {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
             #animeList {
                 max-height: 42vh;
             }
@@ -556,13 +559,14 @@
         </header>
 
         <nav class="tabs" aria-label="AMV-Listen">
-            <div class="tab active" data-list="0" role="button" tabindex="0">AMV 1</div>
-            <div class="tab" data-list="1" role="button" tabindex="0">AMV 2</div>
-            <div class="tab" data-list="2" role="button" tabindex="0">AMV 3</div>
-            <div class="tab" data-list="3" role="button" tabindex="0">AMV 4</div>
-            <div class="tab" data-list="4" role="button" tabindex="0">AMV 5</div>
-            <div class="tab" data-list="5" role="button" tabindex="0">AMV 6</div>
-            <div class="tab" data-list="6" role="button" tabindex="0">AMV 7</div>
+            <div class="tab active" data-list="0" role="button" tabindex="0">Vorrunde 1</div>
+            <div class="tab" data-list="1" role="button" tabindex="0">Vorrunde 2</div>
+            <div class="tab" data-list="2" role="button" tabindex="0">Vorrunde 3</div>
+            <div class="tab" data-list="3" role="button" tabindex="0">Vorrunde 4</div>
+            <div class="tab" data-list="4" role="button" tabindex="0">Halbfinale 1</div>
+            <div class="tab" data-list="5" role="button" tabindex="0">Halbfinale 2</div>
+            <div class="tab" data-list="6" role="button" tabindex="0">Spiel um Platz 3</div>
+            <div class="tab" data-list="7" role="button" tabindex="0">Finale</div>
         </nav>
 
         <div id="statusMessage" class="status-message" role="status" aria-live="polite"></div>
@@ -606,7 +610,8 @@
     </aside>
 
     <script>
-        let animeData = Array.from({ length: 7 }, () => []);
+        const LIST_COUNT = 8;
+        let animeData = Array.from({ length: LIST_COUNT }, () => []);
         let currentList = 0;
         let selectedCatalogAnime = null;
         let catalogSearchTimer = null;
@@ -1141,8 +1146,14 @@
                     throw new Error(`HTTP ${response.status}`);
                 }
                 const data = await response.json();
-                if (Array.isArray(data) && data.length === 7) {
-                    animeData = data;
+                if (Array.isArray(data) && data.length >= LIST_COUNT - 1) {
+                    const needsMigration = data.length === LIST_COUNT - 1;
+                    animeData = Array.from({ length: LIST_COUNT }, (_, index) => (
+                        Array.isArray(data[index]) ? data[index] : []
+                    ));
+                    if (needsMigration) {
+                        saveAnimeData();
+                    }
                 }
                 renderAnimeList();
             } catch (error) {
