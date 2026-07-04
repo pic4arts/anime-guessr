@@ -1,5 +1,6 @@
 node_modules/
 anime_data.json
+tournament_data.json
 .env
 data/images/
 *.tmp

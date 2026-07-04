@@ -132,6 +132,154 @@
             text-shadow: 0 0 18px rgba(0, 225, 231, 0.3);
         }
 
+        .tournament-panel {
+            margin-bottom: 18px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(41, 41, 46, 0.76);
+        }
+
+        .tournament-summary {
+            padding: 13px 16px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            cursor: pointer;
+            font-weight: 800;
+            list-style: none;
+            user-select: none;
+        }
+
+        .tournament-summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .tournament-summary::before {
+            content: "▶";
+            color: var(--primary);
+            font-size: 0.72rem;
+            transition: transform 0.18s;
+        }
+
+        .tournament-panel[open] .tournament-summary::before {
+            transform: rotate(90deg);
+        }
+
+        .tournament-summary:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .tournament-summary-title {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tournament-content {
+            padding: 14px 16px 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .match-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+
+        .match-heading {
+            margin: 0 0 3px;
+            font-size: 1.05rem;
+        }
+
+        .match-hint {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+
+        .match-result {
+            flex: 0 0 auto;
+            max-width: 52%;
+            margin-left: auto;
+            padding: 5px 9px;
+            overflow: hidden;
+            border: 1px solid rgba(245, 240, 0, 0.34);
+            border-radius: 999px;
+            color: var(--yellow);
+            font-size: 0.75rem;
+            font-weight: 750;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .participant-match {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 9px;
+        }
+
+        .participant-card {
+            min-width: 0;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: #202024;
+        }
+
+        .participant-label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--muted);
+            font-size: 0.72rem;
+            font-weight: 750;
+            text-transform: uppercase;
+        }
+
+        .participant-name {
+            min-height: 43px;
+            padding: 11px 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            color: var(--text);
+            background: #19191c;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .participant-name.pending {
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        .winner-select {
+            width: 100%;
+            margin-top: 8px;
+            padding: 8px 10px;
+            border: 1px solid rgba(0, 225, 231, 0.45);
+            border-radius: 8px;
+            color: var(--primary);
+            cursor: pointer;
+            background: rgba(0, 225, 231, 0.08);
+            font-weight: 750;
+        }
+
+        .winner-select:hover:not(:disabled),
+        .winner-select.active {
+            border-color: var(--yellow);
+            color: #151515;
+            background: var(--yellow);
+        }
+
+        .winner-select:disabled {
+            cursor: not-allowed;
+            opacity: 0.4;
+        }
+
         .status-message {
             display: none;
             margin-bottom: 16px;
@@ -545,6 +693,18 @@
                 flex-direction: column;
             }
 
+            .match-header {
+                flex-direction: column;
+            }
+
+            .match-result {
+                max-width: 100%;
+            }
+
+            .participant-match {
+                grid-template-columns: 1fr;
+            }
+
             #addButton {
                 width: 100%;
             }
@@ -579,6 +739,22 @@
             <div class="tab" data-list="6" role="button" tabindex="0">Spiel um Platz 3</div>
             <div class="tab" data-list="7" role="button" tabindex="0">Finale</div>
         </nav>
+
+        <details class="tournament-panel">
+            <summary class="tournament-summary">
+                <span class="tournament-summary-title">Teilnehmer &amp; Turnierverlauf</span>
+                <span id="matchResult" class="match-result">Noch offen</span>
+            </summary>
+            <div class="tournament-content">
+                <div class="match-header">
+                    <div>
+                        <h2 id="matchHeading" class="match-heading">Teilnehmer – Vorrunde 1</h2>
+                        <p id="matchHint" class="match-hint">Namen eintragen und anschließend den Gewinner auswählen.</p>
+                    </div>
+                </div>
+                <div id="participantMatch" class="participant-match"></div>
+            </div>
+        </details>
 
         <div id="statusMessage" class="status-message" role="status" aria-live="polite"></div>
 
@@ -622,7 +798,21 @@
 
     <script>
         const LIST_COUNT = 8;
+        const MATCH_LABELS = [
+            'Vorrunde 1',
+            'Vorrunde 2',
+            'Vorrunde 3',
+            'Vorrunde 4',
+            'Halbfinale 1',
+            'Halbfinale 2',
+            'Spiel um Platz 3',
+            'Finale',
+        ];
         let animeData = Array.from({ length: LIST_COUNT }, () => []);
+        let tournamentData = {
+            participants: Array(8).fill(''),
+            winners: Array(8).fill(null),
+        };
         let currentList = 0;
         let selectedCatalogAnime = null;
         let catalogSearchTimer = null;
@@ -631,6 +821,9 @@
         let saveTimer = null;
         let saveInProgress = false;
         let savePending = false;
+        let tournamentSaveTimer = null;
+        let tournamentSaveInProgress = false;
+        let tournamentSavePending = false;
         const imageRequests = new Set();
         const API_URL = window.location.origin;
         const SAVE_DELAY = 250;
@@ -642,6 +835,10 @@
         const catalogResults = document.getElementById('catalogResults');
         const searchAnimeInput = document.getElementById('searchAnime');
         const statusMessage = document.getElementById('statusMessage');
+        const matchHeading = document.getElementById('matchHeading');
+        const matchHint = document.getElementById('matchHint');
+        const matchResult = document.getElementById('matchResult');
+        const participantMatch = document.getElementById('participantMatch');
         const animePreview = document.getElementById('animePreview');
         const previewImage = document.getElementById('previewImage');
         const previewCaption = document.getElementById('previewCaption');
@@ -691,6 +888,180 @@
                 anime.titles?.romaji,
                 anime.titles?.native,
             ].some(value => normalizeText(value).includes(query));
+        }
+
+        function directParticipant(index) {
+            const name = String(tournamentData.participants[index] || '').trim();
+            return {
+                name,
+                pending: `Teilnehmer ${index + 1} eintragen`,
+            };
+        }
+
+        function participantFromMatch(matchIndex, result) {
+            const participants = getMatchParticipants(matchIndex);
+            const winnerSlot = tournamentData.winners[matchIndex];
+            const hasResult = winnerSlot === 0 || winnerSlot === 1;
+            const selectedSlot = result === 'winner' ? winnerSlot : 1 - winnerSlot;
+            const participant = hasResult ? participants[selectedSlot] : null;
+            const resultLabel = result === 'winner' ? 'Gewinner' : 'Verlierer';
+
+            if (!participant?.name) {
+                return {
+                    name: '',
+                    pending: `${resultLabel} ${MATCH_LABELS[matchIndex]} steht noch nicht fest`,
+                };
+            }
+            return participant;
+        }
+
+        function getMatchParticipants(matchIndex) {
+            if (matchIndex < 4) {
+                return [
+                    directParticipant(matchIndex * 2),
+                    directParticipant(matchIndex * 2 + 1),
+                ];
+            }
+            if (matchIndex === 4) {
+                return [
+                    participantFromMatch(0, 'winner'),
+                    participantFromMatch(1, 'winner'),
+                ];
+            }
+            if (matchIndex === 5) {
+                return [
+                    participantFromMatch(2, 'winner'),
+                    participantFromMatch(3, 'winner'),
+                ];
+            }
+            if (matchIndex === 6) {
+                return [
+                    participantFromMatch(4, 'loser'),
+                    participantFromMatch(5, 'loser'),
+                ];
+            }
+            return [
+                participantFromMatch(4, 'winner'),
+                participantFromMatch(5, 'winner'),
+            ];
+        }
+
+        function resetFollowingMatches(matchIndex) {
+            let affectedMatches = [];
+            if (matchIndex === 0 || matchIndex === 1) {
+                affectedMatches = [4, 6, 7];
+            } else if (matchIndex === 2 || matchIndex === 3) {
+                affectedMatches = [5, 6, 7];
+            } else if (matchIndex === 4 || matchIndex === 5) {
+                affectedMatches = [6, 7];
+            }
+            affectedMatches.forEach(index => {
+                tournamentData.winners[index] = null;
+            });
+        }
+
+        function winnerResultLabel(matchIndex, participantName) {
+            if (!participantName) {
+                return 'Noch offen';
+            }
+            if (matchIndex === 6) {
+                return `Platz 3: ${participantName}`;
+            }
+            if (matchIndex === 7) {
+                return `Turniersieger: ${participantName}`;
+            }
+            return `Gewinner: ${participantName}`;
+        }
+
+        function renderParticipantMatch() {
+            const matchIndex = currentList;
+            const participants = getMatchParticipants(matchIndex);
+            const winnerSlot = tournamentData.winners[matchIndex];
+            const selectedParticipant = winnerSlot === 0 || winnerSlot === 1
+                ? participants[winnerSlot]
+                : null;
+
+            matchHeading.textContent = `Teilnehmer – ${MATCH_LABELS[matchIndex]}`;
+            matchHint.textContent = matchIndex < 4
+                ? 'Namen eintragen und anschließend den Gewinner auswählen.'
+                : 'Die Teilnehmer werden automatisch aus den vorherigen Runden übernommen.';
+            matchResult.textContent = winnerResultLabel(matchIndex, selectedParticipant?.name);
+            participantMatch.replaceChildren();
+
+            participants.forEach((participant, slot) => {
+                const card = document.createElement('article');
+                card.className = 'participant-card';
+
+                const label = document.createElement('label');
+                label.className = 'participant-label';
+                label.textContent = `Teilnehmer ${slot + 1}`;
+
+                if (matchIndex < 4) {
+                    const participantIndex = matchIndex * 2 + slot;
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.maxLength = 100;
+                    input.autocomplete = 'off';
+                    input.value = tournamentData.participants[participantIndex];
+                    input.placeholder = `Name von Teilnehmer ${participantIndex + 1}`;
+                    input.setAttribute('aria-label', `${MATCH_LABELS[matchIndex]}, Teilnehmer ${slot + 1}`);
+                    label.htmlFor = `participant-${participantIndex}`;
+                    input.id = `participant-${participantIndex}`;
+                    input.addEventListener('input', () => {
+                        tournamentData.participants[participantIndex] = input.value;
+                        participant.name = input.value.trim();
+                        if (!input.value.trim() && tournamentData.winners[matchIndex] === slot) {
+                            tournamentData.winners[matchIndex] = null;
+                        }
+                        resetFollowingMatches(matchIndex);
+                        const isCurrentWinner = tournamentData.winners[matchIndex] === slot;
+                        winnerButton.disabled = !participant.name;
+                        winnerButton.classList.toggle('active', isCurrentWinner);
+                        winnerButton.textContent = isCurrentWinner
+                            ? 'Gewinner ✓'
+                            : 'Als Gewinner wählen';
+                        winnerButton.setAttribute(
+                            'aria-label',
+                            participant.name
+                                ? `${participant.name} als Gewinner von ${MATCH_LABELS[matchIndex]} wählen`
+                                : `Teilnehmer ${slot + 1} ist noch nicht festgelegt`
+                        );
+                        const currentWinner = tournamentData.winners[matchIndex];
+                        const currentParticipants = getMatchParticipants(matchIndex);
+                        const currentWinnerName = currentWinner === 0 || currentWinner === 1
+                            ? currentParticipants[currentWinner].name
+                            : '';
+                        matchResult.textContent = winnerResultLabel(matchIndex, currentWinnerName);
+                        saveTournamentData();
+                    });
+                    card.append(label, input);
+                } else {
+                    const name = document.createElement('div');
+                    name.className = `participant-name${participant.name ? '' : ' pending'}`;
+                    name.textContent = participant.name || participant.pending;
+                    card.append(label, name);
+                }
+
+                const winnerButton = document.createElement('button');
+                winnerButton.type = 'button';
+                winnerButton.className = `winner-select${winnerSlot === slot ? ' active' : ''}`;
+                winnerButton.disabled = !participant.name;
+                winnerButton.textContent = winnerSlot === slot ? 'Gewinner ✓' : 'Als Gewinner wählen';
+                winnerButton.setAttribute(
+                    'aria-label',
+                    participant.name
+                        ? `${participant.name} als Gewinner von ${MATCH_LABELS[matchIndex]} wählen`
+                        : `Teilnehmer ${slot + 1} ist noch nicht festgelegt`
+                );
+                winnerButton.addEventListener('click', () => {
+                    tournamentData.winners[matchIndex] = slot;
+                    resetFollowingMatches(matchIndex);
+                    saveTournamentData();
+                    renderParticipantMatch();
+                });
+                card.appendChild(winnerButton);
+                participantMatch.appendChild(card);
+            });
         }
 
         function makeIconButton(label, className, pathData) {
@@ -894,6 +1265,7 @@
             currentList = Number(tab.dataset.list);
             searchAnimeInput.value = '';
             renderAnimeList();
+            renderParticipantMatch();
         }
 
         tabs.forEach(tab => {
@@ -1212,6 +1584,43 @@
             }, SAVE_DELAY);
         }
 
+        function saveTournamentData() {
+            tournamentSavePending = true;
+            clearTimeout(tournamentSaveTimer);
+            tournamentSaveTimer = setTimeout(() => {
+                tournamentSaveTimer = null;
+                flushTournamentData();
+            }, SAVE_DELAY);
+        }
+
+        async function flushTournamentData() {
+            if (tournamentSaveInProgress) {
+                return;
+            }
+
+            tournamentSaveInProgress = true;
+            try {
+                while (tournamentSavePending) {
+                    tournamentSavePending = false;
+                    const response = await fetch(`${API_URL}/api/tournament`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(tournamentData),
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    await response.json();
+                }
+            } catch (error) {
+                tournamentSavePending = true;
+                console.error('Fehler beim Speichern der Turnierdaten:', error);
+                showStatus('Teilnehmer konnten nicht gespeichert werden.', true);
+            } finally {
+                tournamentSaveInProgress = false;
+            }
+        }
+
         async function flushAnimeData(showConfirmation = false) {
             if (saveInProgress) {
                 return;
@@ -1243,6 +1652,28 @@
             }
         }
 
+        async function loadTournamentData() {
+            try {
+                const response = await fetch(`${API_URL}/api/tournament`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const data = await response.json();
+                if (
+                    Array.isArray(data.participants)
+                    && data.participants.length === 8
+                    && Array.isArray(data.winners)
+                    && data.winners.length === 8
+                ) {
+                    tournamentData = data;
+                }
+                renderParticipantMatch();
+            } catch (error) {
+                console.error('Fehler beim Laden der Turnierdaten:', error);
+                showStatus('Teilnehmer konnten nicht geladen werden.', true);
+            }
+        }
+
         async function loadAnimeData() {
             try {
                 const response = await fetch(`${API_URL}/api/anime`);
@@ -1271,6 +1702,10 @@
             clearTimeout(saveTimer);
             saveTimer = null;
             flushAnimeData(true);
+            tournamentSavePending = true;
+            clearTimeout(tournamentSaveTimer);
+            tournamentSaveTimer = null;
+            flushTournamentData();
         });
 
         document.getElementById('wrongButton').addEventListener('click', () => {
@@ -1281,9 +1716,11 @@
         window.addEventListener('resize', hidePreview);
         window.addEventListener('load', () => {
             loadAnimeData();
+            loadTournamentData();
         });
 
         renderAnimeList();
+        renderParticipantMatch();
     </script>
 </body>
 </html>

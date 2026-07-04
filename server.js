@@ -15,6 +15,10 @@ const DATA_FILE = process.env.ANIME_DATA_FILE
     ? path.resolve(process.env.ANIME_DATA_FILE)
     : path.join(RUNTIME_DIR, 'anime_data.json');
 const TEMP_DATA_FILE = `${DATA_FILE}.tmp`;
+const TOURNAMENT_DATA_FILE = process.env.TOURNAMENT_DATA_FILE
+    ? path.resolve(process.env.TOURNAMENT_DATA_FILE)
+    : path.join(RUNTIME_DIR, 'tournament_data.json');
+const TEMP_TOURNAMENT_DATA_FILE = `${TOURNAMENT_DATA_FILE}.tmp`;
 const IMAGE_DIR = process.env.ANIME_IMAGE_DIR
     ? path.resolve(process.env.ANIME_IMAGE_DIR)
     : path.join(RUNTIME_DIR, 'data', 'images');
@@ -27,6 +31,7 @@ const ANILIST_REQUEST_INTERVAL_MS = 2100;
 const IMAGE_REQUEST_INTERVAL_MS = 500;
 const MAX_RATE_LIMIT_RETRIES = 2;
 let writeQueue = Promise.resolve();
+let tournamentWriteQueue = Promise.resolve();
 let aniListRequestQueue = Promise.resolve();
 let imageRequestQueue = Promise.resolve();
 let lastAniListRequestAt = 0;
@@ -57,6 +62,22 @@ if (!fs.existsSync(DATA_FILE)) {
     } catch (error) {
         console.warn('Bestehende Anime-Listen konnten beim Start nicht migriert werden:', error.message);
     }
+}
+
+function createEmptyTournamentData() {
+    return {
+        participants: Array(8).fill(''),
+        winners: Array(8).fill(null),
+    };
+}
+
+if (!fs.existsSync(TOURNAMENT_DATA_FILE)) {
+    fs.writeFileSync(
+        TOURNAMENT_DATA_FILE,
+        JSON.stringify(createEmptyTournamentData(), null, 2),
+        'utf8'
+    );
+    console.log('Turnier-Teilnehmer wurden initialisiert.');
 }
 
 function normalizeSearchText(value) {
@@ -337,6 +358,62 @@ app.post('/api/anime', async (req, res) => {
     } catch (error) {
         console.error('Fehler beim Schreiben der Anime-Listen:', error);
         res.status(500).json({ error: 'Fehler beim Speichern der Daten' });
+    }
+});
+
+function isValidTournamentData(data) {
+    return Boolean(
+        data
+        && Array.isArray(data.participants)
+        && data.participants.length === 8
+        && data.participants.every(name => typeof name === 'string' && name.length <= 100)
+        && Array.isArray(data.winners)
+        && data.winners.length === 8
+        && data.winners.every(winner => winner === null || winner === 0 || winner === 1)
+    );
+}
+
+app.get('/api/tournament', (req, res) => {
+    fs.readFile(TOURNAMENT_DATA_FILE, 'utf8', (error, data) => {
+        if (error) {
+            console.error('Fehler beim Lesen der Turnierdaten:', error);
+            return res.status(500).json({ error: 'Fehler beim Laden der Turnierdaten' });
+        }
+
+        try {
+            const parsed = JSON.parse(data);
+            if (!isValidTournamentData(parsed)) {
+                return res.status(500).json({ error: 'Ungültiges Turnierdatenformat' });
+            }
+            res.json(parsed);
+        } catch (parseError) {
+            console.error('Fehler beim Parsen der Turnierdaten:', parseError);
+            res.status(500).json({ error: 'Fehler beim Parsen der Turnierdaten' });
+        }
+    });
+});
+
+app.post('/api/tournament', async (req, res) => {
+    if (!isValidTournamentData(req.body)) {
+        return res.status(400).json({
+            error: 'Es werden acht Teilnehmer und acht Rundenergebnisse erwartet.',
+        });
+    }
+
+    const newData = JSON.stringify(req.body, null, 2);
+    const writeOperation = tournamentWriteQueue.then(async () => {
+        await fs.promises.writeFile(TEMP_TOURNAMENT_DATA_FILE, newData, 'utf8');
+        await fs.promises.rename(TEMP_TOURNAMENT_DATA_FILE, TOURNAMENT_DATA_FILE);
+    });
+
+    tournamentWriteQueue = writeOperation.catch(() => {});
+
+    try {
+        await writeOperation;
+        res.json({ message: 'Turnierdaten erfolgreich gespeichert' });
+    } catch (error) {
+        console.error('Fehler beim Schreiben der Turnierdaten:', error);
+        res.status(500).json({ error: 'Fehler beim Speichern der Turnierdaten' });
     }
 });
 

@@ -8,6 +8,7 @@ const vm = require('vm');
 const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'anime-guessr-test-'));
 process.env.ANIME_DATA_FILE = path.join(temporaryDirectory, 'anime_data.json');
 process.env.ANIME_IMAGE_DIR = path.join(temporaryDirectory, 'images');
+process.env.TOURNAMENT_DATA_FILE = path.join(temporaryDirectory, 'tournament_data.json');
 fs.writeFileSync(
     process.env.ANIME_DATA_FILE,
     JSON.stringify(Array.from({ length: 7 }, () => [])),
@@ -79,6 +80,23 @@ async function main() {
         const migrated = await request(port, '/api/anime');
         assert.strictEqual(migrated.body.length, 8, 'Sieben bestehende Listen wurden nicht migriert');
 
+        const emptyTournament = await request(port, '/api/tournament');
+        assert.strictEqual(emptyTournament.status, 200);
+        assert.deepStrictEqual(emptyTournament.body.participants, Array(8).fill(''));
+        assert.deepStrictEqual(emptyTournament.body.winners, Array(8).fill(null));
+
+        const tournament = {
+            participants: ['Aiko', 'Ben', 'Chika', 'Dario', 'Emi', 'Finn', 'Gina', 'Haru'],
+            winners: [0, 1, 0, 1, 0, 1, 1, 0],
+        };
+        const savedTournament = await request(port, '/api/tournament', {
+            method: 'POST',
+            body: tournament,
+        });
+        assert.strictEqual(savedTournament.status, 200);
+        const loadedTournament = await request(port, '/api/tournament');
+        assert.deepStrictEqual(loadedTournament.body, tournament);
+
         const german = await request(port, '/api/catalog/search?q=Apothekerin&limit=1');
         assert.strictEqual(german.status, 200);
         assert.ok(german.body[0].titles.german, 'Deutscher Titel fehlt');
@@ -145,6 +163,8 @@ async function main() {
         assert.ok(page.body.includes('Anime hinzufügen'));
         assert.ok(page.body.includes('catalogSearch'));
         assert.ok(page.body.includes('Ein Titel pro Zeile'));
+        assert.ok(page.body.includes('participantMatch'));
+        assert.ok(page.body.includes('Als Gewinner wählen'));
         const embeddedScript = page.body.match(/<script>([\s\S]*?)<\/script>/);
         assert.ok(embeddedScript, 'Frontend-Script fehlt');
         assert.doesNotThrow(
