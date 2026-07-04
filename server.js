@@ -7,6 +7,7 @@ const https = require('https');
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const LIST_COUNT = 8;
+const MAX_RESOLVE_QUERIES = 500;
 const PROJECT_DIR = __dirname;
 const RUNTIME_DIR = process.pkg ? path.dirname(process.execPath) : PROJECT_DIR;
 const PUBLIC_DIR = path.join(PROJECT_DIR, 'public');
@@ -258,18 +259,29 @@ app.post('/api/catalog/resolve', (req, res) => {
     if (
         !Array.isArray(queries)
         || queries.length === 0
-        || queries.length > 100
+        || queries.length > MAX_RESOLVE_QUERIES
         || queries.some(query => typeof query !== 'string' || query.length > 500)
     ) {
         return res.status(400).json({
-            error: 'Es werden 1 bis 100 Anime-Titel als Text erwartet.',
+            error: `Es werden 1 bis ${MAX_RESOLVE_QUERIES} Anime-Titel als Text erwartet.`,
         });
     }
 
-    const results = queries.map(query => ({
-        query: query.trim(),
-        match: findCatalogEntries(query, 1, true)[0] || null,
-    }));
+    const matchesByQuery = new Map();
+    const results = queries.map(query => {
+        const normalizedQuery = normalizeSearchText(query);
+        if (!matchesByQuery.has(normalizedQuery)) {
+            matchesByQuery.set(
+                normalizedQuery,
+                findCatalogEntries(query, 1, true)[0] || null
+            );
+        }
+
+        return {
+            query: query.trim(),
+            match: matchesByQuery.get(normalizedQuery),
+        };
+    });
 
     res.json(results);
 });

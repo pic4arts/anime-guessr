@@ -98,14 +98,23 @@ async function main() {
         const resolved = await request(port, '/api/catalog/resolve', {
             method: 'POST',
             body: {
-                queries: ['Death Note', 'Frieren', 'Kein Anime mit diesem Fantasienamen 12345'],
+                queries: [
+                    'Death Note',
+                    'Frieren',
+                    'Kein Anime mit diesem Fantasienamen 12345',
+                    ...Array.from(
+                        { length: 217 },
+                        (_, index) => index % 2 === 0 ? 'Death Note' : 'Frieren'
+                    ),
+                ],
             },
         });
         assert.strictEqual(resolved.status, 200);
-        assert.strictEqual(resolved.body.length, 3);
+        assert.strictEqual(resolved.body.length, 220);
         assert.ok(resolved.body[0].match.anilistId, 'AniList-Verknüpfung fehlt');
         assert.ok(resolved.body[1].match.anilistId, 'Mehrfachsuche findet Frieren nicht');
         assert.strictEqual(resolved.body[2].match, null, 'Unbekannter Titel wurde fälschlich aufgelöst');
+        assert.ok(resolved.body[219].match.anilistId, 'Lange Mehrfachsuche wurde abgeschnitten');
 
         const lists = [
             [{
